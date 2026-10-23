@@ -1,0 +1,32 @@
+# Mohammed Bourass — Developer Portfolio
+
+A client-only, static portfolio built with Vite, React, TypeScript, and Tailwind CSS. It has no backend, database, authentication, or required API services. Unknown personal contact details and external URLs are intentionally placeholders in `src/data/profile.ts`; replace them before publishing. Add your real CV at `public/cv.pdf` and optional images under `public/`.
+
+## Run locally
+
+1. Install Node.js 20 or newer.
+2. Install dependencies: `npm ci` (or `npm install` if you are updating the lockfile).
+3. Start the dev server: `npm run dev`.
+4. Verify the production version with `npm run build` and `npm run preview`.
+
+## Deploy to GitHub Pages
+
+1. Create a GitHub repository for the portfolio and push this project to its `main` branch. Commit `package-lock.json` after running `npm install`; the workflow uses `npm ci`.
+2. In the repository, open **Settings > Pages**.
+3. Set **Build and deployment > Source** to **GitHub Actions**.
+4. Push to `main` (or run the workflow manually from the Actions tab). `.github/workflows/deploy.yml` builds `dist/` and publishes it with GitHub Pages actions.
+5. Wait for the Pages deployment workflow to finish, then open the URL shown in the workflow or Pages settings.
+
+`vite.config.ts` sets `base: './'` so generated assets use relative paths and work from a repository subpath. Hash-free section anchors do not require server routing. The workflow needs the repository's normal Pages deployment permissions; no API key or paid service is needed.
+
+## Edit content
+
+- `src/data/profile.ts`: name details, contact links, availability facts, stack, strengths, products, and the `SHOW_STARTUP_SECTION` switch.
+- `src/data/projects.ts`: project summaries in English, French, and Arabic, tech stacks, highlights, categories, status, and optional links. Unknown links should be omitted; do not leave placeholder links in a published project.
+- `src/data/timeline.ts`: localized timeline entries. Startup-related timeline items use `startup: true` and hide automatically with the startup section.
+- `src/data/skills.ts`: skill groups and their items.
+- `src/data/github.ts`: static repository cards. The contribution chart is a progressive external image and has an error fallback; the page remains complete if it is unavailable.
+- `src/i18n/en.json`, `fr.json`, `ar.json`: translated interface labels and page copy. To add a language, add its locale JSON, add its code to the `Lang` type and `translations` map in `src/App.tsx`, then provide translated `en/fr/ar`-style fields in project and timeline data (or expand the locale type accordingly). Update the language selector choices in the navbar and footer.
+- `src/style.css`: layout, colors, responsive behavior, motion, and RTL adjustments.
+
+The language preference and theme are stored in local storage when available; browser language is used on the first visit. Arabic automatically sets document `lang` and `dir` to Arabic and RTL.
