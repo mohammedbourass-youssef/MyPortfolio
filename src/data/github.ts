@@ -1,3 +1,3 @@
 export type Repository = { name: string; description: string; language: string; url: string }
-const names = ['Bookly_App','chatApp','ebyte-vision-forge','eByte_Software','Hanotk','iphone-marketing-sells','ManageMate','Maz-Add_Proj','MiniPortfolio','QuickNotes','QURAAN-PLAYER','Snack-X-Menu-Admin','vendor-haven-04','VisionGuard','MyFirstWebProject_SCESSORS_ROCK_PAPER','Rif-Hotel-Management-System']
+const names = ['Bookly_App','chatApp','Hanotk','iphone-marketing-sells','ManageMate','Maz-Add_Proj','MiniPortfolio','QuickNotes','QURAAN-PLAYER','Snack-X-Menu-Admin','vendor-haven-04','VisionGuard','MyFirstWebProject_SCESSORS_ROCK_PAPER','Rif-Hotel-Management-System']
 export const repositories: Repository[] = names.map((name, i) => ({ name, description: '[DESCRIPTION]', language: i===2||i===8||i===11?'TypeScript':i===6||i===15?'C#':i===5?'CSS':'Dart', url: `https://github.com/mohammedbourass-youssef/${name}` }))

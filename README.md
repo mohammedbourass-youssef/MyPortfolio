@@ -1,6 +1,6 @@
 # Mohammed Bourass — Developer Portfolio
 
-A client-only, static portfolio built with Vite, React, TypeScript, and Tailwind CSS. It has no backend, database, authentication, or required API services. Unknown personal contact details and external URLs are intentionally placeholders in `src/data/profile.ts`; replace them before publishing. Add your real CV at `public/cv.pdf` and optional images under `public/`.
+A client-only, static portfolio built with Vite, React, TypeScript, and Tailwind CSS. It has no backend, database, authentication, or required API services. Unknown external URLs are intentionally left blank in `src/data/profile.ts`. The profile photo is `public/Profile.jpg`; English and French CV downloads use `public/D_ENGLISH.pdf` and `public/CV_FRENSH.pdf` respectively.
 
 ## Run locally
 
@@ -21,9 +21,10 @@ A client-only, static portfolio built with Vite, React, TypeScript, and Tailwind
 
 ## Edit content
 
-- `src/data/profile.ts`: name details, contact links, availability facts, stack, strengths, products, and the `SHOW_STARTUP_SECTION` switch.
+- `src/data/profile.ts`: name details, contact links, availability facts, stack, strengths, and footer stats.
 - `src/data/projects.ts`: project summaries in English, French, and Arabic, tech stacks, highlights, categories, status, and optional links. Unknown links should be omitted; do not leave placeholder links in a published project.
-- `src/data/timeline.ts`: localized timeline entries. Startup-related timeline items use `startup: true` and hide automatically with the startup section.
+- `src/data/timeline.ts`: localized timeline entries.
+- `src/data/services.ts`: localized service cards, descriptions, and bullet points.
 - `src/data/skills.ts`: skill groups and their items.
 - `src/data/certificates.ts`: certificate title translations, issuer, date, file under `public/`, optional thumbnail, and optional verification URL. The section checks each certificate file and hides entries that are not present. The supplied list is empty until you add your certificate details and files.
 - `src/data/github.ts`: static repository cards. The contribution chart is a progressive external image and has an error fallback; the page remains complete if it is unavailable.
