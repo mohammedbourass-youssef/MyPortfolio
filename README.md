@@ -25,6 +25,7 @@ A client-only, static portfolio built with Vite, React, TypeScript, and Tailwind
 - `src/data/projects.ts`: project summaries in English, French, and Arabic, tech stacks, highlights, categories, status, and optional links. Unknown links should be omitted; do not leave placeholder links in a published project.
 - `src/data/timeline.ts`: localized timeline entries. Startup-related timeline items use `startup: true` and hide automatically with the startup section.
 - `src/data/skills.ts`: skill groups and their items.
+- `src/data/certificates.ts`: certificate title translations, issuer, date, file under `public/`, optional thumbnail, and optional verification URL. The section checks each certificate file and hides entries that are not present. The supplied list is empty until you add your certificate details and files.
 - `src/data/github.ts`: static repository cards. The contribution chart is a progressive external image and has an error fallback; the page remains complete if it is unavailable.
 - `src/i18n/en.json`, `fr.json`, `ar.json`: translated interface labels and page copy. To add a language, add its locale JSON, add its code to the `Lang` type and `translations` map in `src/App.tsx`, then provide translated `en/fr/ar`-style fields in project and timeline data (or expand the locale type accordingly). Update the language selector choices in the navbar and footer.
 - `src/style.css`: layout, colors, responsive behavior, motion, and RTL adjustments.
