@@ -9,7 +9,7 @@ export type Certificate = {
   verifyUrl?: string
 }
 
-const certificate = (id: string, title: Certificate['title'], issuer: string, file: string): Certificate => ({ id, title, issuer, file })
+const certificate = (id: string, title: Certificate['title'], issuer: string, file: string): Certificate => ({ id, title, issuer, file, thumb: `certificates-thumbs/${id}.jpg` })
 
 export const certificates: Certificate[] = [
   certificate('flutter-mvvm-bloc', { en: 'MVVM and BLoC', fr: 'MVVM et BLoC', ar: 'MVVM وBLoC' }, 'Flutter', 'Certifecates/Flutter/MVVM and Bloc.pdf'),
