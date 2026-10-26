@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ArrowDownLeft, ExternalLink, Github, X } from 'lucide-react'
+import { ArrowDownLeft, ExternalLink, Github, X, Youtube } from 'lucide-react'
 import { projects, type Project } from '../data/projects'
 import type { Lang, T } from '../lib/i18n'
 import SectionHeading from './SectionHeading'
@@ -20,7 +20,7 @@ function ProjectCard({ project, lang, t, onClick }: { project: Project; lang: La
       <div className="project-title"><h3>{project.title}</h3><ArrowDownLeft size={17} /></div>
       <p>{project.summary[lang]}</p>
       <div className="project-stack" dir="ltr">{project.stack.slice(0, 4).map(s => <span key={s}>#{s.toUpperCase().replace(/\s+/g, '_')}</span>)}</div>
-      <div className="project-links">{project.links?.github?.startsWith('http') && <Github size={14} />}{project.links?.live?.startsWith('http') && <ExternalLink size={14} />}{project.links?.video?.startsWith('http') && <span>▶</span>}</div>
+      <div className="project-links">{project.links?.github?.startsWith('http') && <Github size={14} />}{project.links?.live?.startsWith('http') && <ExternalLink size={14} />}{project.links?.video?.startsWith('http') && <Youtube size={14} />}</div>
     </div>
   </button>
 }
@@ -46,7 +46,7 @@ function ProjectModal({ project, lang, t, onClose }: { project: Project; lang: L
       <div className="modal-links">
         {project.links?.github && <a className="button button-outline" href={project.links.github} target="_blank" rel="noopener noreferrer"><Github size={16} />{t.projects.github}</a>}
         {project.links?.live && <a className="button button-outline" href={project.links.live} target="_blank" rel="noopener noreferrer"><ExternalLink size={15} />{t.projects.live}</a>}
-        {project.links?.video?.startsWith('http') && <a className="button button-outline" href={project.links.video} target="_blank" rel="noopener noreferrer">▶ {t.projects.video}</a>}
+        {project.links?.video?.startsWith('http') && <a className="button button-outline" href={project.links.video} target="_blank" rel="noopener noreferrer"><Youtube size={15} />{t.projects.video}</a>}
       </div>
     </section>
   </div>

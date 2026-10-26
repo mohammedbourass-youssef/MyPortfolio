@@ -1,9 +1,11 @@
 import { useMemo, useState } from 'react'
-import { Download, ExternalLink, FileBadge } from 'lucide-react'
+import { ChevronDown, Download, ExternalLink, FileBadge } from 'lucide-react'
 import { certificates, type Certificate } from '../data/certificates'
 import { assetUrl } from '../lib/assets'
 import type { Lang, T } from '../lib/i18n'
 import SectionHeading from './SectionHeading'
+
+const issuerOrder = ['Flutter', 'Programming Advices', 'Oracle', 'MongoDB']
 
 function CertificateCard({ certificate, lang, t }: { certificate: Certificate; lang: Lang; t: T }) {
   const [thumbFailed, setThumbFailed] = useState(false)
@@ -28,19 +30,36 @@ function CertificateCard({ certificate, lang, t }: { certificate: Certificate; l
 }
 
 export default function CertificatesSection({ lang, t }: { lang: Lang; t: T }) {
-  const groups = useMemo(() => certificates.reduce<Record<string, Certificate[]>>((result, certificate) => {
-    (result[certificate.issuer] ??= []).push(certificate)
-    return result
-  }, {}), [])
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({})
+  const groups = useMemo(() => {
+    const grouped = certificates.reduce<Record<string, Certificate[]>>((result, certificate) => {
+      (result[certificate.issuer] ??= []).push(certificate)
+      return result
+    }, {})
+    return Object.entries(grouped).sort(([a], [b]) => {
+      const aIndex = issuerOrder.indexOf(a)
+      const bIndex = issuerOrder.indexOf(b)
+      return (aIndex === -1 ? issuerOrder.length : aIndex) - (bIndex === -1 ? issuerOrder.length : bIndex)
+    })
+  }, [])
+  const toggle = (issuer: string) => setOpenGroups(current => ({ ...current, [issuer]: !current[issuer] }))
   return <>
     <SectionHeading eyebrow={`[ SEC_07 // ${t.sections.certificates} ]`} title={t.certificates.title} subtitle={t.certificates.subtitle} />
-    <div className="certificate-groups">{Object.entries(groups).map(([issuer, items]) =>
-      <div className="certificate-group" key={issuer}>
-        <h3>{issuer}</h3>
-        <div className="certificate-grid">{items.map(certificate =>
-          <CertificateCard key={certificate.id} certificate={certificate} lang={lang} t={t} />
-        )}</div>
+    <div className="certificate-groups">{groups.map(([issuer, items]) => {
+      const open = Boolean(openGroups[issuer])
+      const panelId = `certificate-group-${issuer.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
+      return <div className={`certificate-group${open ? ' open' : ''}`} key={issuer}>
+        <button className="certificate-group-toggle" aria-expanded={open} aria-controls={panelId} onClick={() => toggle(issuer)}>
+          <span className="certificate-group-name">{issuer}</span>
+          <span className="certificate-group-count">{String(items.length).padStart(2, '0')}</span>
+          <ChevronDown className="certificate-group-chevron" size={17} aria-hidden="true" />
+        </button>
+        {open && <div className="certificate-group-body" id={panelId}>
+          <div className="certificate-grid">{items.map(certificate =>
+            <CertificateCard key={certificate.id} certificate={certificate} lang={lang} t={t} />
+          )}</div>
+        </div>}
       </div>
-    )}</div>
+    })}</div>
   </>
 }
