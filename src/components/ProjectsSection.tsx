@@ -9,7 +9,7 @@ const categoryKeys: Record<string, string> = { all: 'all', backend: 'backend', w
 function ProjectCard({ project, lang, t, onClick }: { project: Project; lang: Lang; t: T; onClick: () => void }) {
   const cat = project.category[0]
   const number = String(projects.findIndex(item => item.id === project.id) + 1).padStart(2, '0')
-  return <button className="project-card" onClick={onClick}>
+  return <button className="project-card project-card-animated" onClick={onClick}>
     <div className={`project-visual visual-${cat}`}>
       <span className="visual-grid" />
       <span className="visual-monogram">{project.title.split(' ').slice(0, 2).map(w => w[0]).join('')}</span>
@@ -58,10 +58,10 @@ export default function ProjectsSection({ lang, t }: { lang: Lang; t: T }) {
   const visibleProjects = useMemo(() => projects.filter(project => filter === 'all' || project.category.includes(filter)), [filter])
   return <>
     <SectionHeading eyebrow={`[ SEC_04 // ${t.sections.projects} ]`} title={t.projects.title} subtitle={t.projects.subtitle} />
-    <div className="filter-tabs" role="tablist">{Object.keys(categoryKeys).map(key =>
+    <div className="filter-tabs projects-filter" role="tablist">{Object.keys(categoryKeys).map(key =>
       <button role="tab" aria-selected={filter === key} className={filter === key ? 'active' : ''} key={key} onClick={() => setFilter(key)}>{t.projects[categoryKeys[key] as keyof typeof t.projects]}</button>
     )}</div>
-    <div className="project-grid">{visibleProjects.map(project =>
+    <div className="project-grid project-grid-animated">{visibleProjects.map(project =>
       <ProjectCard key={project.id} project={project} lang={lang} t={t} onClick={() => setSelected(project)} />
     )}</div>
     {selected && <ProjectModal project={selected} lang={lang} t={t} onClose={() => setSelected(null)} />}
