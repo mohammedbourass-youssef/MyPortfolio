@@ -55,15 +55,19 @@ function ProjectModal({ project, lang, t, onClose }: { project: Project; lang: L
 export default function ProjectsSection({ lang, t }: { lang: Lang; t: T }) {
   const [filter, setFilter] = useState('all')
   const [selected, setSelected] = useState<Project | null>(null)
+  const [expanded, setExpanded] = useState(false)
   const visibleProjects = useMemo(() => projects.filter(project => filter === 'all' || project.category.includes(filter)), [filter])
+  const shown = expanded ? visibleProjects : visibleProjects.slice(0, 3)
+  const hasMore = visibleProjects.length > 3
   return <>
     <SectionHeading eyebrow={`[ SEC_04 // ${t.sections.projects} ]`} title={t.projects.title} subtitle={t.projects.subtitle} />
     <div className="filter-tabs projects-filter" role="tablist">{Object.keys(categoryKeys).map(key =>
-      <button role="tab" aria-selected={filter === key} className={filter === key ? 'active' : ''} key={key} onClick={() => setFilter(key)}>{t.projects[categoryKeys[key] as keyof typeof t.projects]}</button>
+      <button role="tab" aria-selected={filter === key} className={filter === key ? 'active' : ''} key={key} onClick={() => { setFilter(key); setExpanded(false) }}>{t.projects[categoryKeys[key] as keyof typeof t.projects]}</button>
     )}</div>
-    <div className="project-grid project-grid-animated">{visibleProjects.map(project =>
+    <div className="project-grid project-grid-animated">{shown.map(project =>
       <ProjectCard key={project.id} project={project} lang={lang} t={t} onClick={() => setSelected(project)} />
     )}</div>
+    {hasMore && <div className="projects-toggle-wrap"><button className="projects-toggle" onClick={() => setExpanded(v => !v)} aria-expanded={expanded}>{expanded ? (lang==='ar'?'إظهار أقل':lang==='fr'?'Voir moins':'Show less') : (lang==='ar'?'إظهار المزيد':lang==='fr'?'Voir plus':'Show more')}</button></div>}
     {selected && <ProjectModal project={selected} lang={lang} t={t} onClose={() => setSelected(null)} />}
   </>
 }
