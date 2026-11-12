@@ -1,3 +1,12 @@
 export type Repository = { name: string; description: string; language: string; url: string }
-const names = ['Bookly_App','chatApp','Hanotk','iphone-marketing-sells','ManageMate','Maz-Add_Proj','MiniPortfolio','QuickNotes','QURAAN-PLAYER','Snack-X-Menu-Admin','vendor-haven-04','VisionGuard','MyFirstWebProject_SCESSORS_ROCK_PAPER','Rif-Hotel-Management-System']
-export const repositories: Repository[] = names.map((name, i) => ({ name, description: '[DESCRIPTION]', language: i===2||i===8||i===11?'TypeScript':i===6||i===15?'C#':i===5?'CSS':'Dart', url: `https://github.com/mohammedbourass-youssef/${name}` }))
+
+export const repositories: Repository[] = [
+  { name: 'DigitalMenuQrNFC', description: 'Multi-tenant SaaS for restaurants with QR/NFC digital menus, live orders, payments and a localized admin dashboard.', language: 'TypeScript', url: 'https://github.com/mohammedbourass-youssef/DigitalMenuQrNFC' },
+  { name: 'ManageMate', description: 'Flutter team-management app to search members, assign and track tasks, monitor progress and collaborate in real time.', language: 'Dart', url: 'https://github.com/mohammedbourass-youssef/ManageMate' },
+  { name: 'QuickNotes', description: 'Lightweight Flutter note-taking app with Cubit state management, Hive persistence and dynamic theming.', language: 'Dart', url: 'https://github.com/mohammedbourass-youssef/QuickNotes' },
+  { name: 'Hanotk', description: 'Mobile shopping app for store clients, backed by a C# API and a restore-ready database.', language: 'Dart', url: 'https://github.com/mohammedbourass-youssef/Hanotk' },
+  { name: 'Rif-Hotel-Management-System', description: 'Desktop hotel management system in C# and SQL Server covering bookings, rooms, guests, billing and reports.', language: 'C#', url: 'https://github.com/mohammedbourass-youssef/Rif-Hotel-Management-System' },
+  { name: 'QURAAN-PLAYER', description: 'C# desktop Quran player with an organized audio library and database-driven playback.', language: 'C#', url: 'https://github.com/mohammedbourass-youssef/QURAAN-PLAYER' },
+]
+
+export const bestRepositoryNames = repositories.map(repo => repo.name)

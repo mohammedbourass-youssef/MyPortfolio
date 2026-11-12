@@ -19,6 +19,7 @@ export interface GithubRepo {
   language: string | null
   pushed_at: string
   fork: boolean
+  archived?: boolean
   topics?: string[]
 }
 
@@ -36,5 +37,5 @@ export interface GithubActivityData {
   totalForks: number
   nonForkCount: number
   topLanguages: LanguageStat[]
-  latestRepos: GithubRepo[]
+  bestRepos: GithubRepo[]
 }

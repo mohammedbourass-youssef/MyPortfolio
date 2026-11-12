@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import type { GithubActivityData, GithubRepo, GithubUser, LanguageStat } from '../types/github'
+import { bestRepositoryNames } from '../data/github'
 
 const USER = 'mohammedbourass-youssef'
-const CACHE_KEY = 'github-activity-v1'
+const CACHE_KEY = 'github-activity-v2'
 const CACHE_TTL = 60 * 60 * 1000
 
 const languageColors: Record<string, string> = {
@@ -27,6 +28,26 @@ const languageColors: Record<string, string> = {
 function getColor(lang: string | null) {
   if (!lang) return 'var(--muted)'
   return languageColors[lang] || 'var(--accent)'
+}
+
+function repoScore(repo: GithubRepo, now: number) {
+  const ageDays = (now - new Date(repo.pushed_at).getTime()) / 86400000
+  const recency = ageDays <= 90 ? 6 : ageDays <= 365 ? 3 : 0
+  const documentation = (repo.description?.trim().length ?? 0) >= 20 ? 3 : 0
+  const topics = Math.min(repo.topics?.length ?? 0, 3)
+  const popularity = repo.stargazers_count * 10 + repo.forks_count * 5
+  return popularity + recency + documentation + topics
+}
+
+function rankRepos(repos: GithubRepo[]) {
+  const now = Date.now()
+  return [...repos]
+    .map(repo => {
+      const featuredRank = bestRepositoryNames.indexOf(repo.name)
+      return { repo, featuredRank: featuredRank === -1 ? bestRepositoryNames.length : featuredRank, score: repoScore(repo, now) }
+    })
+    .sort((a, b) => a.featuredRank - b.featuredRank || b.score - a.score || new Date(b.repo.pushed_at).getTime() - new Date(a.repo.pushed_at).getTime())
+    .map(({ repo }) => repo)
 }
 
 function readCache(): GithubActivityData | null {
@@ -69,11 +90,10 @@ async function fetchGithubActivity(signal: AbortSignal): Promise<GithubActivityD
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5)
     .map(([name, count]) => ({ name, count, percent: Math.round((count / totalLang) * 1000) / 10, color: getColor(name) }))
-  const latestRepos = [...nonFork]
-    .filter(r => r.name.toLowerCase() !== `${USER}.github.io` && !r.name.includes(USER))
-    .sort((a, b) => new Date(b.pushed_at).getTime() - new Date(a.pushed_at).getTime())
-    .slice(0, 6)
-  const data: GithubActivityData = { user, repos, totalStars, totalForks, nonForkCount: nonFork.length, topLanguages, latestRepos }
+  const bestRepos = rankRepos(
+    nonFork.filter(r => !r.archived && r.name.toLowerCase() !== `${USER}.github.io` && !r.name.includes(USER))
+  ).slice(0, 6)
+  const data: GithubActivityData = { user, repos, totalStars, totalForks, nonForkCount: nonFork.length, topLanguages, bestRepos }
   writeCache(data)
   return data
 }
