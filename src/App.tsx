@@ -9,7 +9,7 @@ import { repositories } from './data/github'
 import { services, type Service } from './data/services'
 import { translations, type Lang } from './lib/i18n'
 import { assetUrl, cvUrl, whatsappHref } from './lib/assets'
-import AskMe from './components/AskMe'
+import ChatWidget from './components/ChatWidget'
 const ProjectsSection = lazy(() => import('./components/ProjectsSection'))
 const CertificatesSection = lazy(() => import('./components/CertificatesSection'))
 const QuoteSection = lazy(() => import('./components/QuoteSection'))
@@ -110,8 +110,6 @@ export default function App() {
 
       <section id="about" className="section-wrap section-block"><SectionHeading eyebrow={`[ SEC_01 // ${t.sections.about} ]`} title={t.about.title}/><div className="about-grid"><div className="about-copy"><p className="about-lead">{t.about.lead}</p><p>{t.about.body}</p><h3>{t.about.strengths}</h3><div className="strength-grid">{profile.strengths.map(s=><div className="strength-item" key={s}><span className="check-mark"><Check size={14}/></span>{s}</div>)}</div></div><aside className="facts-card"><h3>{t.about.facts}</h3>{profile.facts.map(f=><div className="fact-row" key={f.key}><span>{t.about[f.key as keyof typeof t.about]}</span>{f.key==='languages'?<div className="language-chips">{t.about.languageNames.map(name=><span className="language-chip" key={name}>{name}</span>)}</div>:f.key==='status'?<AvailabilityStatus t={t} compact/>:<strong>{f.value}</strong>}</div>)}</aside></div></section>
 
-      <AskMe />
-
       <FocusTicker items={t.ticker} lang={lang}/>
 
       <section id="services" className="section-wrap section-block"><SectionHeading eyebrow={`[ SEC_02 // ${t.sections.services} ]`} title={t.services.title} subtitle={t.services.subtitle}/><div className="services-grid">{services.map((service,index)=><ServiceCard key={service.id} service={service} index={index} lang={lang} t={t}/>)}</div></section>
@@ -139,6 +137,8 @@ export default function App() {
     <footer className="footer"><a className="brand" href="#top"><span className="brand-mark">MB</span><span>mohammed<span className="brand-dot">.</span></span></a><span>© 2026 Mohammed Bourass · {t.footer.built}</span><span className="footer-availability" dir={lang==='ar'?'rtl':'ltr'}>{t.footer.availability}</span><div className="footer-right"><div className="language-switch">{(['en','fr','ar'] as Lang[]).map((l,i)=><React.Fragment key={l}>{i>0&&<span>|</span>}<button aria-pressed={lang===l} onClick={()=>setLang(l)}>{l.toUpperCase()}</button></React.Fragment>)}</div><a className="top-button" href="#top" aria-label={t.footer.top}><ArrowUp size={17}/></a></div></footer>
 
     {toast&&<div className="toast" role="status"><Check size={16}/>{toast}</div>}
+
+    <ChatWidget />
 
   </div>
 
