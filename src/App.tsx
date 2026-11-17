@@ -9,6 +9,7 @@ import { repositories } from './data/github'
 import { services, type Service } from './data/services'
 import { translations, type Lang } from './lib/i18n'
 import { assetUrl, cvUrl, whatsappHref } from './lib/assets'
+import AskMe from './components/AskMe'
 const ProjectsSection = lazy(() => import('./components/ProjectsSection'))
 const CertificatesSection = lazy(() => import('./components/CertificatesSection'))
 const QuoteSection = lazy(() => import('./components/QuoteSection'))
@@ -108,6 +109,8 @@ export default function App() {
       <StatsRow t={t}/>
 
       <section id="about" className="section-wrap section-block"><SectionHeading eyebrow={`[ SEC_01 // ${t.sections.about} ]`} title={t.about.title}/><div className="about-grid"><div className="about-copy"><p className="about-lead">{t.about.lead}</p><p>{t.about.body}</p><h3>{t.about.strengths}</h3><div className="strength-grid">{profile.strengths.map(s=><div className="strength-item" key={s}><span className="check-mark"><Check size={14}/></span>{s}</div>)}</div></div><aside className="facts-card"><h3>{t.about.facts}</h3>{profile.facts.map(f=><div className="fact-row" key={f.key}><span>{t.about[f.key as keyof typeof t.about]}</span>{f.key==='languages'?<div className="language-chips">{t.about.languageNames.map(name=><span className="language-chip" key={name}>{name}</span>)}</div>:f.key==='status'?<AvailabilityStatus t={t} compact/>:<strong>{f.value}</strong>}</div>)}</aside></div></section>
+
+      <AskMe />
 
       <FocusTicker items={t.ticker} lang={lang}/>
 
