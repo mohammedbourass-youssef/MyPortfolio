@@ -8,6 +8,9 @@ import { timeline } from './data/timeline'
 import { services, type Service } from './data/services'
 import { translations, type Lang } from './lib/i18n'
 import { assetUrl, cvUrl, emailHref, whatsappHref } from './lib/assets'
+import CaseStudiesSection from './components/CaseStudiesSection'
+import TestimonialsSection from './components/TestimonialsSection'
+import NotesSection from './components/NotesSection'
 const ChatWidget = lazy(() => import('./components/ChatWidget'))
 const ProjectsSection = lazy(() => import('./components/ProjectsSection'))
 const CertificatesSection = lazy(() => import('./components/CertificatesSection'))
@@ -119,6 +122,8 @@ export default function App() {
 
       <section id="projects" className="section-wrap section-block"><Suspense fallback={<SectionFallback/>}><ProjectsSection lang={lang} t={t}/></Suspense></section>
 
+      <CaseStudiesSection lang={lang} t={t}/>
+
       <section id="journey" className="section-wrap section-block"><SectionHeading eyebrow={`[ SEC_05 // ${t.sections.journey} ]`} title={t.journey.title} subtitle={t.journey.subtitle}/><div className="timeline"><div className="timeline-track"><div className="timeline-fill" style={{height:`${progress}%`}}/></div>{timeline.map((entry,i)=>{const Icon=icons[entry.icon]||Sparkles;return <article className={`timeline-item ${i%2?'right':''}`} key={`${entry.date}-${entry.title.en}`}><span className="timeline-node"><Icon size={16}/></span><div className="timeline-card"><span className="timeline-date">{entry.date}</span><h3>{entry.title[lang]}</h3><p>{entry.text[lang]}</p></div></article>})}</div></section>
 
       <Suspense fallback={<div className="quote-fallback" aria-hidden="true"/>}><QuoteSection lang={lang} t={t}/></Suspense>
@@ -126,6 +131,9 @@ export default function App() {
       <section id="certificates" className="section-wrap section-block"><Suspense fallback={<SectionFallback/>}><CertificatesSection lang={lang} t={t}/></Suspense></section>
 
       <Suspense fallback={<SectionFallback/>}><GithubActivitySection lang={lang} t={t}/></Suspense>
+
+      <TestimonialsSection lang={lang} t={t}/>
+      <NotesSection lang={lang} t={t}/>
 
       <section id="experience" className="section-wrap section-block"><SectionHeading eyebrow={`[ SEC_09 // ${t.sections.experience} ]`} title={t.experience.title}/><div className="experience-grid"><div><h3 className="column-heading"><BriefcaseBusiness size={18}/>{t.experience.work}</h3><Experience title="Backend Engineer" org="Teltra Connecting Things" date="Dec 2025 – Jun 2026" detail="Remote · Kuwait client"/><Experience title="Freelance Software Developer" org="Mostaql, Workana" date="2025 – present" detail="Client projects across web, desktop, and mobile software."/><Experience title="Initiation internship" org="ENSA" date="Jun 2025" detail="Restaurant management ERP delivered in 40 days."/></div><div><h3 className="column-heading"><GraduationCap size={20}/>{t.experience.education}</h3><Experience title="Computer Science Engineering" org="ENSAF · Fès" date="2022 – present" detail="Year 2 of 3."/><Experience title="Baccalauréat · Physical Sciences" org="Lycée Prince Moulay Hassan, Fès" date="2022" detail=""/></div></div></section>
 
