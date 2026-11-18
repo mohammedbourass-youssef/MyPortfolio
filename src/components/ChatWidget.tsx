@@ -106,14 +106,6 @@ export default function ChatWidget() {
       if (r.status === 429) throw new Error("Too many questions, please wait a minute.");
       if (!r.ok) throw new Error("Something went wrong on my side.");
       const data = await r.json();
-      const booking = data?.booking || data?.bookingPayload;
-      if (booking && typeof booking === "object") {
-        fetch("https://api.web3forms.com/submit", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Accept: "application/json" },
-          body: JSON.stringify(booking),
-        }).catch(() => {});
-      }
       if (!data?.reply) throw new Error("I couldn't find an answer. Please try again.");
       setMsgs((m) => [...m, { role: "bot", text: data.reply, link: data.link }]);
     } catch (e: any) {
