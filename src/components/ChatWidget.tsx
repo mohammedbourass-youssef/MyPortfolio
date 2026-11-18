@@ -1,13 +1,60 @@
 import { useEffect, useRef, useState } from "react";
+import { Mail, MessageCircle, Send } from "lucide-react";
 import type { Lang, T } from "../lib/i18n";
 
 const API = "https://portfolio-ai.srx-mbrs2004.workers.dev";
 const SPEECH_KEY = "cw-speech-bubble";
 
-type Msg = { role: "user" | "bot"; text: string; link?: { label: string; url: string } };
+type ChatLink = { label: string; url: string };
+type Msg = { role: "user" | "bot"; text: string; links?: ChatLink[]; link?: ChatLink };
 
 const SR: any =
   typeof window !== "undefined" ? (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition : null;
+
+function isAllowedLinkUrl(url: string) {
+  return /^https?:\/\//i.test(url) || /^mailto:/i.test(url);
+}
+
+function normalizeLinks(raw: unknown, fallbackLabel: string): ChatLink[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((candidate): candidate is Record<string, unknown> => Boolean(candidate) && typeof candidate === "object")
+    .map((candidate) => ({
+      label: typeof candidate.label === "string" && candidate.label.trim() ? candidate.label.trim().slice(0, 80) : fallbackLabel,
+      url: typeof candidate.url === "string" ? candidate.url : "",
+    }))
+    .filter((link) => isAllowedLinkUrl(link.url));
+}
+
+function getLinkKind(link: ChatLink) {
+  const value = `${link.label} ${link.url}`.toLowerCase();
+  if (/wa\.me|whatsapp|واتساب/.test(value)) return "whatsapp";
+  if (/t\.me|telegram|تيليجرام|تليجرام/.test(value)) return "telegram";
+  if (/^mailto:|email|e-mail|بريد|إيميل|ايميل/.test(value)) return "email";
+  return "link";
+}
+
+function ChatLinkButton({ link }: { link: ChatLink }) {
+  const kind = getLinkKind(link);
+  const Icon = kind === "whatsapp" ? MessageCircle : kind === "telegram" ? Send : kind === "email" ? Mail : null;
+  const external = /^https?:\/\//i.test(link.url);
+  return (
+    <a
+      className={`cw-link ${kind}`}
+      href={link.url}
+      target={external ? "_blank" : undefined}
+      rel={external ? "noopener noreferrer" : undefined}
+      download={/\.pdf(\?|$)/i.test(link.url)}
+    >
+      {Icon && <Icon size={15} aria-hidden="true" />}
+      <span>{link.label}</span>
+    </a>
+  );
+}
+
+function ChatLinkRow({ links }: { links: ChatLink[] }) {
+  return <div className="cw-links">{links.map((link, index) => <ChatLinkButton key={`${link.url}-${index}`} link={link} />)}</div>;
+}
 
 export default function ChatWidget({ lang, t }: { lang: Lang; t: T }) {
   const locale = lang === "ar" ? "ar-MA" : lang === "fr" ? "fr-FR" : "en-US";
@@ -111,11 +158,10 @@ export default function ChatWidget({ lang, t }: { lang: Lang; t: T }) {
       if (!response.ok) throw new Error(t.chat.errors.server);
       const data = await response.json();
       if (!data?.reply) throw new Error(t.chat.errors.noAnswer);
-      const rawLink = data.link;
-      const link = rawLink && typeof rawLink.url === "string" && /^https?:\/\//i.test(rawLink.url)
-        ? { label: typeof rawLink.label === "string" ? rawLink.label : t.common.download, url: rawLink.url }
-        : undefined;
-      setMsgs((current) => [...current, { role: "bot", text: data.reply, link }]);
+      const links = normalizeLinks(data.links, t.common.download);
+      const legacyLinks = links.length ? [] : normalizeLinks(data.link ? [data.link] : [], t.common.download);
+      const allLinks = [...links, ...legacyLinks];
+      setMsgs((current) => [...current, { role: "bot", text: data.reply, links: allLinks.length ? allLinks : undefined }]);
     } catch (error) {
       const name = error instanceof Error ? error.name : (error as { name?: string } | null)?.name;
       const message = error instanceof Error ? error.message : "";
@@ -201,10 +247,8 @@ export default function ChatWidget({ lang, t }: { lang: Lang; t: T }) {
             {msgs.map((message, index) => (
               <div key={index} className={`cw-row ${message.role}`}>
                 <div className={`cw-bubble ${message.role}`} dir="auto">{message.text}</div>
-                {message.link && (
-                  <a className="cw-link" href={message.link.url} target="_blank" rel="noopener noreferrer" download>
-                    {message.link.label}
-                  </a>
+                {(message.links?.length || message.link) && (
+                  <ChatLinkRow links={message.links?.length ? message.links : [message.link as ChatLink]} />
                 )}
               </div>
             ))}
@@ -284,7 +328,14 @@ const css = `
 .cw-bubble{padding:10px 14px;border-radius:16px;font-size:15px;line-height:1.45;white-space:pre-wrap;word-break:break-word}
 .cw-bubble.bot{background:#1b2130;border:1px solid rgba(255,255,255,.07)}
 .cw-bubble.user{background:#2dd4bf;color:#04201c}
-.cw-link{display:inline-block;background:#fff;color:#111;text-decoration:none;border-radius:999px;padding:8px 16px;font-size:14px;font-weight:600}
+.cw-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.cw-link{display:inline-flex;align-items:center;justify-content:center;gap:7px;background:#fff;color:#111;text-decoration:none;border:1px solid transparent;border-radius:999px;padding:8px 14px;font-size:14px;font-weight:600;transition:background .18s,border-color .18s,transform .18s}
+.cw-link svg{flex:none}
+.cw-link:hover{transform:translateY(-1px)}
+.cw-link:focus-visible{outline:2px solid #2dd4bf;outline-offset:2px}
+.cw-link.whatsapp{background:rgba(37,211,102,.14);color:#b8f7cd;border-color:rgba(37,211,102,.32)}
+.cw-link.telegram{background:rgba(56,178,236,.14);color:#bfe9ff;border-color:rgba(56,178,236,.32)}
+.cw-link.email{background:rgba(167,139,250,.14);color:#ddd3ff;border-color:rgba(167,139,250,.32)}
 .cw-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:2px}
 .cw-chip{background:transparent;color:#e8ecf3;border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:8px 14px;font-size:14px;cursor:pointer;transition:background .18s,border-color .18s}
 .cw-chip:hover{background:rgba(45,212,191,.12);border-color:#2dd4bf}

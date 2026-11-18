@@ -14,6 +14,23 @@ This Worker answers the portfolio chat from a fixed profile prompt. No secrets a
 
 D1 stores only outcome, detected language, message length, and timestamp. It does not store raw questions, raw IPs, or AI replies.
 
+## Response contract
+
+Every successful response has a `reply` string. Contact intents also have a `links` array; the CV shortcut keeps the older `link` field for compatibility.
+
+```json
+{
+  "reply": "Please contact Mohammed directly on WhatsApp, Telegram, or by email at srx.mbrs2004@gmail.com to arrange a meeting or call.",
+  "links": [
+    { "label": "WhatsApp", "url": "https://wa.me/212619344478" },
+    { "label": "Telegram", "url": "https://t.me/mb0629" },
+    { "label": "Email", "url": "mailto:srx.mbrs2004@gmail.com" }
+  ]
+}
+```
+
+Labels are localized for English, French and Arabic. Raw URLs are stripped from AI-generated text before it is returned.
+
 ## Bindings and configuration
 
 - `AI`: Cloudflare Workers AI binding. Required.

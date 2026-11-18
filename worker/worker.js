@@ -15,6 +15,10 @@ RULES:
   and answer it from FACTS instead of asking for clarification.
 - For questions like "can he code?" or "is he good?", answer positively and factually
   by citing his stack, projects and experience. Do not exaggerate.
+- For booking, meeting, call, contact or reach-out intents, answer with a short text
+  that points to the contact buttons. Never output raw URLs in that text.
+- The server supplies WhatsApp, Telegram and email buttons for those intents.
+  Never invent other contact details or URLs.
 
 FACTS:
 - Name: Mohammed Bourass, software engineer based in Fès, Morocco.
@@ -71,6 +75,10 @@ const DEFAULT_ORIGIN = "https://mohammedbourass.me";
 const DEFAULT_MODEL = "@cf/meta/llama-3.1-8b-instruct";
 const CV_URL = "https://mohammedbourass.me/D_ENGLISH.pdf";
 const CV_MATCH = /\b(cv|resume|résumé|curriculum|télécharger|telecharger|download)\b|سيرة/i;
+const CONTACT_MATCH = /\b(book(ing)?|schedule|meeting|call|contact|reach(\s+out)?|whatsapp|telegram|email|e-mail|mail|rendez[-\s]?vous|réunion|reunion|appel|appeler|contacter|joindre|écrire|ecrire|message)\b|واتساب|تيليجرام|تليجرام|تواصل|اتصل|اتصال|اجتماع|مكالمة|مكالمه|موعد|احجز|حجز|راسل|بريد|إيميل|ايميل/i;
+const WHATSAPP_URL = "https://wa.me/212619344478";
+const TELEGRAM_URL = "https://t.me/mb0629";
+const EMAIL_URL = "mailto:srx.mbrs2004@gmail.com";
 const FRENCH_PATTERN = /\b(bonjour|merci|avec|bouton|ci-dessous|vous|votre|tes|ton|ta|mes|mon|ma|est|sont|disponible|français|francais|études|etudes|compétences|competences|projets|stage|parle|parlez|quand|pourquoi|comment|où|télécharg|telecharg)\b/i;
 const RATE_LIMIT = 10;
 const RATE_WINDOW = 60_000;
@@ -86,6 +94,34 @@ function cvReply(language) {
   if (language === "ar") return "يمكنك تنزيل سيرة محمد الذاتية باستخدام الزر أدناه.";
   if (language === "fr") return "Vous pouvez télécharger le CV de Mohammed avec le bouton ci-dessous.";
   return "You can download Mohammed's CV with the button below.";
+}
+
+function contactReply(language) {
+  if (language === "ar") return "تواصل مع محمد مباشرة عبر واتساب أو تيليجرام أو البريد الإلكتروني srx.mbrs2004@gmail.com لتحديد موعد أو إجراء مكالمة.";
+  if (language === "fr") return "Contactez Mohammed directement sur WhatsApp, Telegram ou par e-mail à srx.mbrs2004@gmail.com pour organiser une réunion ou un appel.";
+  return "Please contact Mohammed directly on WhatsApp, Telegram, or by email at srx.mbrs2004@gmail.com to arrange a meeting or call.";
+}
+
+function contactLinks(language) {
+  const labels = language === "ar"
+    ? { whatsapp: "واتساب", telegram: "تيليجرام", email: "البريد الإلكتروني" }
+    : language === "fr"
+      ? { whatsapp: "WhatsApp", telegram: "Telegram", email: "E-mail" }
+      : { whatsapp: "WhatsApp", telegram: "Telegram", email: "Email" };
+  return [
+    { label: labels.whatsapp, url: WHATSAPP_URL },
+    { label: labels.telegram, url: TELEGRAM_URL },
+    { label: labels.email, url: EMAIL_URL },
+  ];
+}
+
+function stripUrls(text) {
+  return text
+    .replace(/\b(?:https?:\/\/|www\.)[^\s<>"']+/gi, "")
+    .replace(/\b(?:wa\.me|t\.me)\/[^\s<>"']+/gi, "")
+    .replace(/\bmailto:[^\s<>"']+/gi, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
 }
 
 function fallbackReply(language) {
@@ -166,6 +202,14 @@ export default {
       }), { headers: cors });
     }
 
+    if (CONTACT_MATCH.test(clean)) {
+      await recordEvent(env, "contact", language, clean.length);
+      return new Response(JSON.stringify({
+        reply: contactReply(language),
+        links: contactLinks(language),
+      }), { headers: cors });
+    }
+
     try {
       if (!env.AI) throw new Error("AI binding unavailable");
       const result = await env.AI.run(env.AI_MODEL || DEFAULT_MODEL, {
@@ -176,9 +220,8 @@ export default {
         max_tokens: 200,
         temperature: 0.2,
       });
-      const reply = typeof result?.response === "string" && result.response.trim()
-        ? result.response.trim()
-        : fallbackReply(language);
+      const aiReply = typeof result?.response === "string" ? result.response : "";
+      const reply = stripUrls(aiReply) || fallbackReply(language);
       await recordEvent(env, "ok", language, clean.length);
       return new Response(JSON.stringify({ reply }), { headers: cors });
     } catch {
