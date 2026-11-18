@@ -67,7 +67,7 @@ export default function ProjectsSection({ lang, t }: { lang: Lang; t: T }) {
     <div className="project-grid project-grid-animated">{shown.map(project =>
       <ProjectCard key={project.id} project={project} lang={lang} t={t} onClick={() => setSelected(project)} />
     )}</div>
-    {hasMore && <div className="projects-toggle-wrap"><button className="projects-toggle" onClick={() => setExpanded(v => !v)} aria-expanded={expanded}>{expanded ? (lang==='ar'?'إظهار أقل':lang==='fr'?'Voir moins':'Show less') : (lang==='ar'?'إظهار المزيد':lang==='fr'?'Voir plus':'Show more')}</button></div>}
+    {hasMore && <div className="projects-toggle-wrap"><button className="projects-toggle" onClick={() => setExpanded(v => !v)} aria-expanded={expanded}>{expanded ? t.projects.showLess : t.projects.showMore}</button></div>}
     {selected && <ProjectModal project={selected} lang={lang} t={t} onClose={() => setSelected(null)} />}
   </>
 }

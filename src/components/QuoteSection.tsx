@@ -38,7 +38,7 @@ export default function QuoteSection({ lang, t }: { lang: Lang; t: T }) {
 
   return <section className="quote-section" ref={sectionRef}>
     <div className="quote-content">
-      <span className="quote-eyebrow" dir="ltr">[ SEC_06 // PHILOSOPHY ]</span>
+      <span className="quote-eyebrow" dir="ltr">{t.quote.eyebrow}</span>
       <div className="quote-mark-parallax" aria-hidden="true"><span className="quote-mark" ref={markRef}>“</span></div>
       <blockquote className="quote-english" dir="ltr" aria-label={t.quote.text}>
         <p className="quote-text" aria-hidden="true">{quoteWords.map((part, index) =>
