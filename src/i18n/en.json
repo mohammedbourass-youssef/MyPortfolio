@@ -19,5 +19,6 @@
   "experience": { "title": "Experience & education", "work": "Experience", "education": "Education" },
   "contact": { "eyebrow": "LET’S BUILD SOMETHING USEFUL", "title": "Let's talk.", "text": "Have a project, internship opportunity, or an idea to explore? I’d be glad to hear from you.", "email": "Email", "phone": "Phone / WhatsApp", "linkedin": "LinkedIn", "github": "GitHub", "telegram": "Telegram", "instagram": "Instagram", "youtube": "YouTube", "mostaql": "Mostaql", "workana": "Workana", "copy": "Copy email", "copied": "Email copied to clipboard" },
   "footer": { "built": "Built with React", "availability": "OPEN: PFE • FREELANCE • CDI • CDD • COLLABORATIONS", "top": "Back to top" },
+  "command": { "title": "Quick navigation", "open": "Open quick navigation", "placeholder": "Search sections and actions", "sections": "Sections", "actions": "Actions", "cv": "Download CV", "contact": "Contact", "theme": "Switch theme", "close": "Close", "noResults": "No matches" },
   "common": { "download": "Download CV", "view": "Explore projects", "soon": "Coming up" }
 }

@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
-import { Activity, ArrowDown, ArrowDownLeft, ArrowUp, BriefcaseBusiness, Building2, Cable, Check, Code2, Copy, Database, ExternalLink, Github, Globe2, GraduationCap, HeartPulse, Instagram, Layers3, Lightbulb, Mail, Menu, Monitor, Moon, Network, Rocket, Send, Server, Smartphone, Sparkles, Sun, Terminal, Truck, X, Youtube, type LucideIcon } from 'lucide-react'
+import { Activity, ArrowDown, ArrowDownLeft, ArrowUp, BriefcaseBusiness, Building2, Cable, Check, Code2, Copy, Database, ExternalLink, Github, Globe2, GraduationCap, HeartPulse, Instagram, Layers3, Lightbulb, Mail, Menu, Monitor, Moon, Network, Rocket, Search, Send, Server, Smartphone, Sparkles, Sun, Terminal, Truck, X, Youtube, type LucideIcon } from 'lucide-react'
 import en from './i18n/en.json'
 import { profile } from './data/profile'
 import { skills } from './data/skills'
@@ -11,6 +11,7 @@ import { assetUrl, cvUrl, emailHref, whatsappHref } from './lib/assets'
 import CaseStudiesSection from './components/CaseStudiesSection'
 import TestimonialsSection from './components/TestimonialsSection'
 import NotesSection from './components/NotesSection'
+import CommandPalette from './components/CommandPalette'
 const ChatWidget = lazy(() => import('./components/ChatWidget'))
 const ProjectsSection = lazy(() => import('./components/ProjectsSection'))
 const CertificatesSection = lazy(() => import('./components/CertificatesSection'))
@@ -68,6 +69,8 @@ export default function App() {
 
   const [chatReady, setChatReady] = useState(false)
 
+  const [commandOpen, setCommandOpen] = useState(false)
+
   const t = translations[lang]
 
   const rtl = lang === 'ar'
@@ -84,6 +87,8 @@ export default function App() {
 
   useEffect(() => { const timer = window.setTimeout(() => setChatReady(true), 1200); return () => window.clearTimeout(timer) }, [])
 
+  useEffect(() => { const handleKey = (event: KeyboardEvent) => { if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); setCommandOpen(open => !open) } }; window.addEventListener('keydown', handleKey); return () => window.removeEventListener('keydown', handleKey) }, [])
+
   const anchors = { about: 'about', services: 'services', skills: 'skills', projects: 'projects', journey: 'journey', certificates: 'certificates', github: 'github', experience: 'experience', contact: 'contact' }
 
   const nav: (keyof typeof anchors)[] = ['about','services','skills','projects','journey','certificates','github','experience','contact']
@@ -98,7 +103,7 @@ export default function App() {
 
       <nav className={mobileOpen ? 'nav-links open' : 'nav-links'} aria-label="Main navigation">{nav.map(key => <a key={key} href={`#${anchors[key]}`} onClick={closeMenu}>{t.nav[key]}</a>)}</nav>
 
-      <div className="nav-tools"><div className="language-switch" aria-label="Choose language">{(['en','fr','ar'] as Lang[]).map((l,i)=><React.Fragment key={l}>{i>0&&<span aria-hidden="true">|</span>}<button aria-pressed={lang===l} onClick={()=>setLang(l)}>{l.toUpperCase()}</button></React.Fragment>)}</div><button className="icon-button" aria-label={dark ? 'Switch to light theme' : 'Switch to dark theme'} onClick={()=>setDark(!dark)}>{dark ? <Sun size={18}/> : <Moon size={18}/>}</button><a className="button button-small button-primary cv-nav" href={cvUrl(lang)} download>{t.hero.cv}</a><button className="icon-button menu-toggle" aria-label="Toggle navigation" onClick={()=>setMobileOpen(!mobileOpen)}>{mobileOpen ? <X size={20}/> : <Menu size={20}/>}</button></div>
+      <div className="nav-tools"><button className="icon-button command-trigger" aria-label={t.command.open} onClick={() => setCommandOpen(true)}><Search size={18}/></button><div className="language-switch" aria-label="Choose language">{(['en','fr','ar'] as Lang[]).map((l,i)=><React.Fragment key={l}>{i>0&&<span aria-hidden="true">|</span>}<button aria-pressed={lang===l} onClick={()=>setLang(l)}>{l.toUpperCase()}</button></React.Fragment>)}</div><button className="icon-button" aria-label={dark ? 'Switch to light theme' : 'Switch to dark theme'} onClick={()=>setDark(!dark)}>{dark ? <Sun size={18}/> : <Moon size={18}/>}</button><a className="button button-small button-primary cv-nav" href={cvUrl(lang)} download>{t.hero.cv}</a><button className="icon-button menu-toggle" aria-label="Toggle navigation" onClick={()=>setMobileOpen(!mobileOpen)}>{mobileOpen ? <X size={20}/> : <Menu size={20}/>}</button></div>
 
     </header>
 
@@ -142,6 +147,8 @@ export default function App() {
     </main>
 
     <footer className="footer"><a className="brand" href="#top"><span className="brand-mark">MB</span><span>mohammed<span className="brand-dot">.</span></span></a><span>© 2026 Mohammed Bourass · {t.footer.built}</span><span className="footer-availability" dir={lang==='ar'?'rtl':'ltr'}>{t.footer.availability}</span><div className="footer-right"><div className="language-switch">{(['en','fr','ar'] as Lang[]).map((l,i)=><React.Fragment key={l}>{i>0&&<span>|</span>}<button aria-pressed={lang===l} onClick={()=>setLang(l)}>{l.toUpperCase()}</button></React.Fragment>)}</div><a className="top-button" href="#top" aria-label={t.footer.top}><ArrowUp size={17}/></a></div></footer>
+
+    <CommandPalette open={commandOpen} onClose={() => setCommandOpen(false)} sections={nav.map(key => ({ id: anchors[key], label: t.nav[key] }))} lang={lang} t={t} dark={dark} onToggleTheme={() => setDark(!dark)}/>
 
     {toast&&<div className="toast" role="status"><Check size={16}/>{toast}</div>}
 

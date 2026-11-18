@@ -19,5 +19,6 @@
   "experience": { "title": "Expérience & formation", "work": "Expérience", "education": "Formation" },
   "contact": { "eyebrow": "CRÉONS QUELQUE CHOSE D’UTILE", "title": "Parlons-en.", "text": "Un projet, une opportunité de stage ou une idée à explorer ? Je serai ravi d’échanger avec vous.", "email": "E-mail", "phone": "Téléphone / WhatsApp", "linkedin": "LinkedIn", "github": "GitHub", "telegram": "Telegram", "instagram": "Instagram", "youtube": "YouTube", "mostaql": "Mostaql", "workana": "Workana", "copy": "Copier l’e-mail", "copied": "E-mail copié" },
   "footer": { "built": "Réalisé avec React", "availability": "DISPONIBLE : PFE • FREELANCE • CDI • CDD • COLLABORATIONS", "top": "Retour en haut" },
+  "command": { "title": "Navigation rapide", "open": "Ouvrir la navigation rapide", "placeholder": "Rechercher des sections et des actions", "sections": "Sections", "actions": "Actions", "cv": "Télécharger le CV", "contact": "Contact", "theme": "Changer de thème", "close": "Fermer", "noResults": "Aucun résultat" },
   "common": { "download": "Télécharger mon CV", "view": "Voir les projets", "soon": "À venir" }
 }

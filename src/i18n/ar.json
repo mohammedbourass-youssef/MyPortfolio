@@ -19,5 +19,6 @@
   "experience": { "title": "الخبرة والتعليم", "work": "الخبرة", "education": "التعليم" },
   "contact": { "eyebrow": "لنبنِ شيئاً مفيداً معاً", "title": "لنتحدث.", "text": "لديكم مشروع أو فرصة تدريب أو فكرة تستحق النقاش؟ يسعدني التواصل معكم.", "email": "البريد الإلكتروني", "phone": "الهاتف / واتساب", "linkedin": "LinkedIn", "github": "GitHub", "telegram": "Telegram", "instagram": "Instagram", "youtube": "YouTube", "mostaql": "مستقل", "workana": "Workana", "copy": "نسخ البريد", "copied": "تم نسخ البريد الإلكتروني" },
   "footer": { "built": "بُني باستخدام React", "availability": "متاح: PFE • عمل حر • CDI • CDD • تعاون", "top": "العودة إلى الأعلى" },
+  "command": { "title": "تنقل سريع", "open": "فتح التنقل السريع", "placeholder": "ابحث في الأقسام والإجراءات", "sections": "الأقسام", "actions": "الإجراءات", "cv": "تحميل السيرة الذاتية", "contact": "تواصل", "theme": "تبديل المظهر", "close": "إغلاق", "noResults": "لا توجد نتائج" },
   "common": { "download": "تحميل السيرة الذاتية", "view": "استعرض المشاريع", "soon": "قريباً" }
 }
