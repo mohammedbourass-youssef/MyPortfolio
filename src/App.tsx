@@ -152,7 +152,7 @@ export default function App() {
 
     {toast&&<div className="toast" role="status"><Check size={16}/>{toast}</div>}
 
-    {chatReady && <Suspense fallback={null}><ChatWidget /></Suspense>}
+    {chatReady && <Suspense fallback={null}><ChatWidget lang={lang} t={t} /></Suspense>}
 
   </div>
 
