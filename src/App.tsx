@@ -8,7 +8,7 @@ import { timeline } from './data/timeline'
 import { services, type Service } from './data/services'
 import { translations, type Lang } from './lib/i18n'
 import { assetUrl, cvUrl, emailHref, whatsappHref } from './lib/assets'
-import ChatWidget from './components/ChatWidget'
+const ChatWidget = lazy(() => import('./components/ChatWidget'))
 const ProjectsSection = lazy(() => import('./components/ProjectsSection'))
 const CertificatesSection = lazy(() => import('./components/CertificatesSection'))
 const QuoteSection = lazy(() => import('./components/QuoteSection'))
@@ -63,6 +63,8 @@ export default function App() {
 
   const [progress, setProgress] = useState(0)
 
+  const [chatReady, setChatReady] = useState(false)
+
   const t = translations[lang]
 
   const rtl = lang === 'ar'
@@ -76,6 +78,8 @@ export default function App() {
   useEffect(() => { const marquees = document.querySelectorAll<HTMLElement>('.focus-ticker,.stack-strip'); if (!('IntersectionObserver' in window)) return; const observer = new IntersectionObserver(entries => entries.forEach(entry => entry.target.toggleAttribute('data-paused', !entry.isIntersecting)), { rootMargin: '120px 0px' }); marquees.forEach(element => observer.observe(element)); return () => observer.disconnect() }, [])
 
   useEffect(() => { if (!toast) return; const timer = window.setTimeout(() => setToast(''), 2600); return () => window.clearTimeout(timer) }, [toast])
+
+  useEffect(() => { const timer = window.setTimeout(() => setChatReady(true), 1200); return () => window.clearTimeout(timer) }, [])
 
   const anchors = { about: 'about', services: 'services', skills: 'skills', projects: 'projects', journey: 'journey', certificates: 'certificates', github: 'github', experience: 'experience', contact: 'contact' }
 
@@ -99,7 +103,7 @@ export default function App() {
 
       <div className="boot-line section-wrap" dir="ltr"><span>{t.hero.initializing}</span></div>
 
-      <figure className="hero-photo-card"><picture><source srcSet={assetUrl('Profile.webp')} type="image/webp"/><img src={assetUrl('Profile.jpg')} alt={`${profile.name} profile photo`} width={549} height={560} loading="eager" fetchPriority="high" decoding="async"/></picture><figcaption dir="ltr">PROFILE_01 // MOHAMMED</figcaption></figure>
+      <figure className="hero-photo-card"><img src={assetUrl('Profile-120x150.webp')} srcSet={`${assetUrl('Profile-120x150.webp')} 1x, ${assetUrl('Profile-240x300.webp')} 2x`} alt={`${profile.name} profile photo`} width={120} height={150} loading="eager" fetchPriority="high" decoding="async"/></figure>
 
       <section className="hero section-wrap"><div className="hero-content"><div className="hero-copy"><div className="eyebrow"><span className="eyebrow-line"/>{t.hero.eyebrow}</div><h1>{profile.name}<br/><span>{profile.title}</span></h1><h2 className="hero-tagline">{t.hero.title}</h2><p className="hero-pitch">{t.hero.pitch}</p><div className="availability"><span className="pulse-dot"/>{t.hero.available}</div><div className="hero-actions"><a className="button button-primary" href={cvUrl(lang)} download>{t.hero.cv}<ArrowDown size={16}/></a><a className="button button-outline" href="#contact">{t.hero.contact}</a><a className="text-link" href="#projects">{t.hero.projects}<span>↗</span></a></div><div className="social-links"><a href={profile.github} target="_blank" rel="noreferrer" aria-label="GitHub"><Github/></a><a href={profile.linkedin} target="_blank" rel="noreferrer" aria-label="LinkedIn" className="linkedin-icon">in</a><a href={profile.youtube} target="_blank" rel="noreferrer" aria-label="YouTube"><Youtube/></a><a href={emailHref(lang)} aria-label="Email"><Mail/></a></div></div><div className="hero-art"><div className="orb orb-one"/><div className="orb orb-two"/><div className="code-window"><div className="window-bar"><i/><i/><i/><span>developer.ts</span></div><div className="code-lines"><p><span className="code-purple">const</span> <span className="code-teal">developer</span> = {'{'}</p><p className="indent"><span className="code-blue">name</span>: <span className="code-yellow">"Mohammed"</span>,</p><p className="indent"><span className="code-blue">focus</span>: [</p><p className="indent more"><span className="code-yellow">"Backend systems"</span>,</p><p className="indent more"><span className="code-yellow">"Useful products"</span></p><p className="indent">],</p><p className="indent"><span className="code-blue">building</span>: <span className="code-teal">true</span></p><p>{'}'}<span className="cursor">▍</span></p></div><div className="floating-chip"><span className="pulse-dot"/> shipping reliable software</div></div><div className="hero-orbit orbit-a"/><div className="hero-orbit orbit-b"/></div><div className="stack-strip"><span className="stack-label">{t.hero.stack}</span><div className="stack-scroll">{[...profile.stack,...profile.stack].map((s,i)=><span key={`${s}-${i}`}>{s}</span>)}</div></div></div></section>
 
@@ -133,7 +137,7 @@ export default function App() {
 
     {toast&&<div className="toast" role="status"><Check size={16}/>{toast}</div>}
 
-    <ChatWidget />
+    {chatReady && <Suspense fallback={null}><ChatWidget /></Suspense>}
 
   </div>
 
