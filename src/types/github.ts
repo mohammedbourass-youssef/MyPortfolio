@@ -32,7 +32,6 @@ export interface LanguageStat {
 
 export interface GithubActivityData {
   user: GithubUser
-  repos: GithubRepo[]
   totalStars: number
   totalForks: number
   nonForkCount: number
