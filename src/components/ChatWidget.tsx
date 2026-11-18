@@ -1,7 +1,11 @@
 import { useEffect, useRef, useState } from "react";
+import { profile } from "../data/profile";
+import { whatsappHref } from "../lib/assets";
 
 const API = "https://portfolio-ai.srx-mbrs2004.workers.dev";
-const CHIPS = ["Explore projects", "Tech stack", "Download your CV", "Are you open to internships?", "Contact"];
+const BOOKING_CHIP = "Help Me to book With Mohammed";
+const BOOKING_REPLY = "Sure — I'll open a booking card with the quickest ways to reach Mohammed. Tell him what you need and when you're free.";
+const CHIPS = ["Explore projects", "Tech stack", "Download your CV", BOOKING_CHIP, "Are you open to internships?", "Contact"];
 const GREETING = "Hi there, I'm here to help! Ask me anything about Mohammed's skills, projects or availability.";
 
 type Msg = { role: "user" | "bot"; text: string; link?: { label: string; url: string } };
@@ -16,8 +20,11 @@ export default function ChatWidget() {
   const [loading, setLoading] = useState(false);
   const [time, setTime] = useState(() => new Date());
   const [hint, setHint] = useState(false);
+  const [bookingOpen, setBookingOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const bookingRef = useRef<HTMLDivElement>(null);
   const lastSent = useRef(0);
   const started = msgs.some((m) => m.role === "user");
 
@@ -29,25 +36,56 @@ export default function ChatWidget() {
     return () => clearTimeout(t);
   }, []);
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      if (bookingOpen) setBookingOpen(false);
+      else setOpen(false);
+    };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [bookingOpen]);
+  useEffect(() => { if (bookingOpen) bookingRef.current?.focus(); }, [bookingOpen]);
+  useEffect(() => {
+    if (!bookingOpen) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = previous; };
+  }, [bookingOpen]);
 
   function dismissHint() {
     setHint(false);
     try { sessionStorage.setItem("chat-hint", "1"); } catch {}
   }
 
+  function closeBooking() {
+    setBookingOpen(false);
+  }
+
+  function copyEmail() {
+    const clipboard = navigator.clipboard;
+    if (!clipboard) return;
+    clipboard.writeText(profile.email).then(() => {
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1600);
+    }).catch(() => {});
+  }
+
   function restart() {
     setMsgs([{ role: "bot", text: GREETING }]);
     setTime(new Date());
     setInput("");
+    closeBooking();
   }
 
   async function send(raw: string) {
     const text = raw.trim();
     if (!text || loading) return;
+    if (text.toLowerCase() === BOOKING_CHIP.toLowerCase()) {
+      setMsgs((m) => [...m.slice(-18), { role: "user", text }, { role: "bot", text: BOOKING_REPLY }]);
+      setInput("");
+      setBookingOpen(true);
+      return;
+    }
     if (Date.now() - lastSent.current < 3000) return;
     lastSent.current = Date.now();
 
@@ -181,6 +219,57 @@ export default function ChatWidget() {
           </form>
         </section>
       )}
+
+      {bookingOpen && (
+        <div className="cw-book-backdrop" onMouseDown={(e) => { if (e.target === e.currentTarget) closeBooking(); }}>
+          <div
+            className="cw-book"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Book a conversation with Mohammed"
+            tabIndex={-1}
+            ref={bookingRef}
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            <button type="button" className="cw-book-close" aria-label="Close booking card" onClick={closeBooking}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
+            </button>
+            <div className="cw-book-top">
+              <span className="cw-book-avatar">MB</span>
+              <div>
+                <span className="cw-book-kicker">BOOK A QUICK CONVERSATION</span>
+                <h2>Let's find a time</h2>
+              </div>
+            </div>
+            <span className="cw-book-badge">Open to internships & freelance work</span>
+            <p className="cw-book-copy">Send Mohammed a short message with what you need help with and when you're free. Pick the channel you prefer.</p>
+            <div className="cw-book-options">
+              <a className="cw-book-option primary" href={`mailto:${profile.email}?subject=${encodeURIComponent("Let's book a time")}`} onClick={closeBooking}>
+                <span className="cw-book-option-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2" /><path d="m2 7 10 6 10-6" /></svg>
+                </span>
+                <span className="cw-book-option-copy"><strong>Email</strong><small>Best for detailed requests</small></span>
+                <svg className="cw-book-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+              </a>
+              <a className="cw-book-option" href={profile.telegram} target="_blank" rel="noopener noreferrer" onClick={closeBooking}>
+                <span className="cw-book-option-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21 3-9 18-2.5-7.5L2 11z" /><path d="M9.5 13.5 21 3" /></svg>
+                </span>
+                <span className="cw-book-option-copy"><strong>Telegram</strong><small>Fastest casual reply</small></span>
+                <svg className="cw-book-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+              </a>
+              <a className="cw-book-option" href={whatsappHref(profile.phone)} target="_blank" rel="noopener noreferrer" onClick={closeBooking}>
+                <span className="cw-book-option-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-12.1 7.7L3 21l1.8-5.9A8.5 8.5 0 1 1 21 11.5z" /><path d="M8.5 9.5c0 4 3 7 7 7l1.5-1.8-2.2-1.2-1.3 1.1a6 6 0 0 1-3.1-3.1l1.1-1.3L9.3 8z" /></svg>
+                </span>
+                <span className="cw-book-option-copy"><strong>WhatsApp</strong><small>Quick voice or text</small></span>
+                <svg className="cw-book-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+              </a>
+            </div>
+            <button type="button" className="cw-book-copy-btn" onClick={copyEmail}>{copied ? "Email copied" : "Copy email address"}</button>
+          </div>
+        </div>
+      )}
     </>
   );
 }
@@ -223,5 +312,32 @@ const css = `
 @keyframes cw-pop{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}
 @keyframes cw-blink{0%,80%,100%{opacity:.25}40%{opacity:1}}
 @media (max-width:480px){.cw-panel{right:12px;left:12px;bottom:12px;width:auto;height:calc(100dvh - 24px);max-height:none}}
-@media (prefers-reduced-motion:reduce){.cw-panel,.cw-hint,.cw-launcher{animation:none;transition:none}.cw-dots i{animation:none}}
+.cw-book-backdrop{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;padding:20px;background:rgba(3,7,12,.74);backdrop-filter:blur(8px);animation:cw-fade .2s ease}
+.cw-book{position:relative;width:min(430px,100%);max-height:calc(100dvh - 40px);overflow:auto;padding:26px 24px 22px;border:1px solid rgba(45,212,191,.3);border-radius:26px;background:radial-gradient(circle at 12% 0%,rgba(45,212,191,.16),transparent 42%),linear-gradient(160deg,#151a24,#0d1017);box-shadow:0 30px 90px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.03) inset;color:#e8ecf3;font-family:inherit;outline:none;animation:cw-book-in .28s cubic-bezier(.2,.8,.2,1)}
+.cw-book::before{content:"";position:absolute;top:0;left:24px;right:24px;height:1px;background:linear-gradient(90deg,transparent,#2dd4bf,transparent);opacity:.75}
+.cw-book-close{position:absolute;top:14px;right:14px;width:32px;height:32px;border-radius:50%;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#aab3c2;display:grid;place-items:center;cursor:pointer}
+.cw-book-close:hover{color:#fff;background:rgba(255,255,255,.1)}
+.cw-book-top{display:flex;align-items:center;gap:13px;margin-bottom:14px}
+.cw-book-avatar{width:48px;height:48px;flex:none;border-radius:16px;background:#2dd4bf;color:#04201c;display:grid;place-items:center;font-weight:800;font-size:16px;box-shadow:0 8px 24px rgba(45,212,191,.28)}
+.cw-book-kicker{display:block;color:#2dd4bf;font:600 10px/1.4 'JetBrains Mono',monospace;letter-spacing:.16em}
+.cw-book-top h2{margin:3px 0 0;font:700 25px/1.1 'Arial Narrow',Arial,sans-serif;letter-spacing:-.03em}
+.cw-book-badge{display:inline-flex;padding:6px 10px;border:1px solid rgba(45,212,191,.3);border-radius:999px;background:rgba(45,212,191,.09);color:#7ce7d7;font:500 10px/1.3 'JetBrains Mono',monospace}
+.cw-book-copy{margin:12px 0 18px;color:#9aa5b7;font-size:13px;line-height:1.6}
+.cw-book-options{display:grid;gap:9px}
+.cw-book-option{display:flex;align-items:center;gap:12px;padding:11px;border:1px solid rgba(255,255,255,.09);border-radius:16px;background:rgba(255,255,255,.035);color:#e8ecf3;text-decoration:none;transition:border-color .2s,background .2s,transform .2s}
+.cw-book-option:hover{border-color:rgba(45,212,191,.55);background:rgba(45,212,191,.08);transform:translateY(-2px)}
+.cw-book-option.primary{border-color:rgba(45,212,191,.5);background:rgba(45,212,191,.1)}
+.cw-book-option-icon{width:36px;height:36px;flex:none;display:grid;place-items:center;border-radius:11px;background:rgba(255,255,255,.06);color:#2dd4bf}
+.cw-book-option.primary .cw-book-option-icon{background:#2dd4bf;color:#04201c}
+.cw-book-option-copy{flex:1;min-width:0;display:flex;flex-direction:column}
+.cw-book-option-copy strong{font-size:14px}
+.cw-book-option-copy small{color:#8b95a7;font-size:11px}
+.cw-book-arrow{color:#2dd4bf;opacity:.8}
+.cw-book-copy-btn{width:100%;margin-top:14px;padding:11px;border:1px dashed rgba(255,255,255,.18);border-radius:12px;background:transparent;color:#aab3c2;font:500 11px 'JetBrains Mono',monospace;cursor:pointer}
+.cw-book-copy-btn:hover{border-color:#2dd4bf;color:#2dd4bf}
+.cw-book button:focus-visible,.cw-book a:focus-visible{outline:2px solid #2dd4bf;outline-offset:2px}
+@keyframes cw-fade{from{opacity:0}to{opacity:1}}
+@keyframes cw-book-in{from{opacity:0;transform:translateY(14px) scale(.96)}to{opacity:1;transform:none}}
+@media (max-width:480px){.cw-book-backdrop{padding:14px}.cw-book{padding:22px 18px 18px;border-radius:22px}.cw-book-top h2{font-size:22px}}
+@media (prefers-reduced-motion:reduce){.cw-panel,.cw-hint,.cw-launcher,.cw-book-backdrop,.cw-book,.cw-book-option{animation:none;transition:none}.cw-dots i{animation:none}}
 `;
