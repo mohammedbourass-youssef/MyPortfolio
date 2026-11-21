@@ -1,18 +1,38 @@
 import { useEffect, useRef, useState } from "react";
-import { Mail, MessageCircle, Send } from "lucide-react";
-import type { Lang, T } from "../lib/i18n";
+import { translations, type Lang, type T } from "../lib/i18n";
 
 const API = "https://portfolio-ai.srx-mbrs2004.workers.dev";
+const ASSISTANT_NAME = "ASK AYUT";
+const CONTACT_CHIP = "Contact";
+const CONTACT_CHIP_TEXT = "How can I contact him?";
+const ERROR_FORBIDDEN = "The assistant is only available on mohammedbourass.me.";
+const ERROR_RATE_LIMIT = "Too many questions, please wait a minute.";
+const ERROR_NETWORK = "I couldn't reach the assistant. Please try again.";
+const ERROR_NO_ANSWER = "I couldn't find an answer. Please try again.";
 const SPEECH_KEY = "cw-speech-bubble";
 
 type ChatLink = { label: string; url: string };
-type Msg = { role: "user" | "bot"; text: string; links?: ChatLink[]; link?: ChatLink };
+type LinkKind = "email" | "whatsapp" | "telegram" | "linkedin" | "link";
+type Msg = { role: "user" | "bot"; text: string; links?: ChatLink[]; link?: ChatLink; greeting?: boolean; error?: boolean };
+type HistoryMessage = { role: "user" | "assistant"; content: string };
 
 const SR: any =
   typeof window !== "undefined" ? (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition : null;
 
+function withAssistantName(text: string) {
+  return text.replace(/\{assistant\}/g, ASSISTANT_NAME);
+}
+
+function detectVisitorLang(fallback: Lang): Lang {
+  if (typeof navigator === "undefined") return fallback;
+  const value = navigator.language.toLowerCase();
+  if (value.startsWith("fr")) return "fr";
+  if (value.startsWith("ar")) return "ar";
+  return "en";
+}
+
 function isAllowedLinkUrl(url: string) {
-  return /^https?:\/\//i.test(url) || /^mailto:/i.test(url);
+  return /^https:\/\//i.test(url) || /^mailto:/i.test(url);
 }
 
 function normalizeLinks(raw: unknown, fallbackLabel: string): ChatLink[] {
@@ -26,27 +46,36 @@ function normalizeLinks(raw: unknown, fallbackLabel: string): ChatLink[] {
     .filter((link) => isAllowedLinkUrl(link.url));
 }
 
-function getLinkKind(link: ChatLink) {
-  const value = `${link.label} ${link.url}`.toLowerCase();
-  if (/wa\.me|whatsapp|واتساب/.test(value)) return "whatsapp";
-  if (/t\.me|telegram|تيليجرام|تليجرام/.test(value)) return "telegram";
-  if (/^mailto:|email|e-mail|بريد|إيميل|ايميل/.test(value)) return "email";
+function getLinkKind(link: ChatLink): LinkKind {
+  const value = link.url.toLowerCase();
+  if (/^mailto:/i.test(value)) return "email";
+  if (/wa\.me/i.test(value)) return "whatsapp";
+  if (/t\.me/i.test(value)) return "telegram";
+  if (/linkedin\.com/i.test(value)) return "linkedin";
   return "link";
+}
+
+function LinkIcon({ kind }: { kind: LinkKind }) {
+  const common = { width: 15, height: 15, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, "aria-hidden": true };
+  if (kind === "email") return <svg {...common}><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg>;
+  if (kind === "whatsapp") return <svg {...common}><path d="M21 12a8 8 0 0 1-8 8H7l-4 3V12a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8Z" /><path d="M9 11h.01M15 11h.01M9 15c1.3 1.5 4.7 1.5 6 0" /></svg>;
+  if (kind === "telegram") return <svg {...common}><path d="m22 2-7 20-4-9-9-4Z" /><path d="M22 2 11 13" /></svg>;
+  if (kind === "linkedin") return <svg {...common}><rect x="3" y="3" width="18" height="18" rx="3" /><text x="12" y="16" textAnchor="middle" fontSize="9" fontWeight="700" fill="currentColor" stroke="none">in</text></svg>;
+  return <svg {...common}><path d="M10.5 13.5a5 5 0 0 0 7.5.5l2-2a5 5 0 0 0-7-7l-1.2 1.2" /><path d="M13.5 10.5a5 5 0 0 0-7.5-.5l-2 2a5 5 0 0 0 7 7l1.2-1.2" /></svg>;
 }
 
 function ChatLinkButton({ link }: { link: ChatLink }) {
   const kind = getLinkKind(link);
-  const Icon = kind === "whatsapp" ? MessageCircle : kind === "telegram" ? Send : kind === "email" ? Mail : null;
-  const external = /^https?:\/\//i.test(link.url);
+  const external = /^https:\/\//i.test(link.url);
   return (
     <a
       className={`cw-link ${kind}`}
       href={link.url}
       target={external ? "_blank" : undefined}
       rel={external ? "noopener noreferrer" : undefined}
-      download={/\.pdf(\?|$)/i.test(link.url)}
+      download={/\.pdf$/i.test(link.url)}
     >
-      {Icon && <Icon size={15} aria-hidden="true" />}
+      <LinkIcon kind={kind} />
       <span>{link.label}</span>
     </a>
   );
@@ -56,11 +85,14 @@ function ChatLinkRow({ links }: { links: ChatLink[] }) {
   return <div className="cw-links">{links.map((link, index) => <ChatLinkButton key={`${link.url}-${index}`} link={link} />)}</div>;
 }
 
-export default function ChatWidget({ lang, t }: { lang: Lang; t: T }) {
-  const locale = lang === "ar" ? "ar-MA" : lang === "fr" ? "fr-FR" : "en-US";
-  const speechDir = lang === "ar" ? "rtl" : "ltr";
+export default function ChatWidget(props: { lang: Lang; t: T }) {
+  const visitorLang = detectVisitorLang(props.lang);
+  const chatT = translations[visitorLang];
+  const locale = visitorLang === "ar" ? "ar-MA" : visitorLang === "fr" ? "fr-FR" : "en-US";
+  const speechDir = visitorLang === "ar" ? "rtl" : "ltr";
+  const greeting = withAssistantName(chatT.chat.greeting);
   const [open, setOpen] = useState(false);
-  const [msgs, setMsgs] = useState<Msg[]>([{ role: "bot", text: t.chat.greeting }]);
+  const [msgs, setMsgs] = useState<Msg[]>(() => [{ role: "bot", text: greeting, greeting: true }]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [time, setTime] = useState(() => new Date());
@@ -76,8 +108,8 @@ export default function ChatWidget({ lang, t }: { lang: Lang; t: T }) {
   useEffect(() => {
     setMsgs((current) => current.some((message) => message.role === "user")
       ? current
-      : [{ role: "bot", text: t.chat.greeting }]);
-  }, [lang, t.chat.greeting]);
+      : [{ role: "bot", text: greeting, greeting: true }]);
+  }, [greeting]);
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs, loading, open]);
   useEffect(() => { if (open) inputRef.current?.focus(); }, [open]);
@@ -129,7 +161,7 @@ export default function ChatWidget({ lang, t }: { lang: Lang; t: T }) {
   }
 
   function restart() {
-    setMsgs([{ role: "bot", text: t.chat.greeting }]);
+    setMsgs([{ role: "bot", text: greeting, greeting: true }]);
     setTime(new Date());
     setInput("");
   }
@@ -138,6 +170,15 @@ export default function ChatWidget({ lang, t }: { lang: Lang; t: T }) {
     const text = raw.trim();
     if (!text || loading || Date.now() - lastSent.current < 3000) return;
     lastSent.current = Date.now();
+
+    const history: HistoryMessage[] = msgs
+      .filter((message) => !message.greeting && !message.error)
+      .slice(-5)
+      .map((message) => ({
+        role: message.role === "bot" ? "assistant" : "user",
+        content: message.text.slice(0, 300),
+      }));
+    const messages: HistoryMessage[] = [...history, { role: "user", content: text.slice(0, 300) }];
 
     setMsgs((current) => [...current.slice(-19), { role: "user", text }]);
     setInput("");
@@ -149,26 +190,34 @@ export default function ChatWidget({ lang, t }: { lang: Lang; t: T }) {
       const response = await fetch(API, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text }),
+        body: JSON.stringify({ messages }),
         signal: controller.signal,
       });
-      if (response.status === 400) throw new Error(t.chat.errors.invalid);
-      if (response.status === 403) throw new Error(t.chat.errors.forbidden);
-      if (response.status === 429) throw new Error(t.chat.errors.rateLimit);
-      if (!response.ok) throw new Error(t.chat.errors.server);
-      const data = await response.json();
-      if (!data?.reply) throw new Error(t.chat.errors.noAnswer);
-      const links = normalizeLinks(data.links, t.common.download);
-      const legacyLinks = links.length ? [] : normalizeLinks(data.link ? [data.link] : [], t.common.download);
+      let payload: Record<string, unknown> | null = null;
+      try {
+        const parsed = await response.json();
+        if (parsed && typeof parsed === "object") payload = parsed as Record<string, unknown>;
+      } catch {}
+      if (response.status === 400) throw new Error(chatT.chat.errors.invalid);
+      if (response.status === 403) throw new Error(ERROR_FORBIDDEN);
+      if (response.status === 429) {
+        const workerReply = typeof payload?.reply === "string" ? payload.reply.trim() : "";
+        throw new Error(workerReply || ERROR_RATE_LIMIT);
+      }
+      if (!response.ok) throw new Error(chatT.chat.errors.server);
+      const reply = typeof payload?.reply === "string" ? payload.reply.trim() : "";
+      if (!reply) throw new Error(ERROR_NO_ANSWER);
+      const links = normalizeLinks(payload?.links, chatT.common.download);
+      const legacyLinks = links.length ? [] : normalizeLinks(payload?.link ? [payload.link] : [], chatT.common.download);
       const allLinks = [...links, ...legacyLinks];
-      setMsgs((current) => [...current, { role: "bot", text: data.reply, links: allLinks.length ? allLinks : undefined }]);
+      setMsgs((current) => [...current, { role: "bot", text: reply, links: allLinks.length ? allLinks : undefined }]);
     } catch (error) {
       const name = error instanceof Error ? error.name : (error as { name?: string } | null)?.name;
       const message = error instanceof Error ? error.message : "";
-      const text = name === "AbortError" || error instanceof TypeError
-        ? t.chat.errors.network
-        : message || t.chat.errors.server;
-      setMsgs((current) => [...current, { role: "bot", text }]);
+      const errorText = name === "AbortError" || error instanceof TypeError
+        ? ERROR_NETWORK
+        : message || chatT.chat.errors.server;
+      setMsgs((current) => [...current, { role: "bot", text: errorText, error: true }]);
     } finally {
       window.clearTimeout(timer);
       setLoading(false);
@@ -192,12 +241,12 @@ export default function ChatWidget({ lang, t }: { lang: Lang; t: T }) {
           {speechVisible && (
             <div className="cw-speech" role="status" dir={speechDir}>
               <button type="button" className="cw-speech-main" onClick={openChat}>
-                <span className="cw-speech-text">{`${t.chat.speech.line1}\n${t.chat.speech.line2}`}</span>
+                <span className="cw-speech-text">{`${chatT.chat.speech.line1}\n${chatT.chat.speech.line2}`}</span>
               </button>
               <button
                 type="button"
                 className="cw-speech-close"
-                aria-label={t.chat.a11y.dismiss}
+                aria-label={chatT.chat.a11y.dismiss}
                 onClick={(event) => { event.stopPropagation(); dismissSpeech(); }}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
@@ -209,7 +258,7 @@ export default function ChatWidget({ lang, t }: { lang: Lang; t: T }) {
             ref={launcherRef}
             type="button"
             className={`cw-launcher${launcherPulse ? " pulse" : ""}`}
-            aria-label={t.chat.a11y.open}
+            aria-label={withAssistantName(chatT.chat.a11y.open)}
             onClick={openChat}
           >
             <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -220,32 +269,33 @@ export default function ChatWidget({ lang, t }: { lang: Lang; t: T }) {
       )}
 
       {open && (
-        <section className="cw-panel" role="dialog" aria-label={t.chat.a11y.panel}>
+        <section className="cw-panel" role="dialog" aria-label={withAssistantName(chatT.chat.a11y.panel)}>
           <header className="cw-head">
-            <span className="cw-avatar">MB</span>
+            <span className="cw-avatar">AY</span>
             <div className="cw-title-wrap">
-              <strong className="cw-title">{t.chat.title}</strong>
+              <strong className="cw-title">{withAssistantName(chatT.chat.title)}</strong>
               <span className="cw-status" aria-hidden="true" />
             </div>
-            <button type="button" className="cw-icon" aria-label={t.chat.a11y.restart} onClick={restart}>
+            <button type="button" className="cw-icon" aria-label={chatT.chat.a11y.restart} onClick={restart}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8" /><path d="M21 3v5h-5" /></svg>
             </button>
-            <button type="button" className="cw-icon" aria-label={t.chat.a11y.close} onClick={closeChat}>
+            <button type="button" className="cw-icon" aria-label={chatT.chat.a11y.close} onClick={closeChat}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
             </button>
           </header>
 
           <p className="cw-notice">
-            {t.chat.notice}{" "}
-            <a href="#contact" onClick={() => setOpen(false)}>{t.chat.noticeLink}</a>.
+            {chatT.chat.notice}{" "}
+            <a href="#contact" onClick={() => setOpen(false)}>{chatT.chat.noticeLink}</a>.
           </p>
 
           <div className="cw-msgs" aria-live="polite">
             <div className="cw-time">
-              {t.chat.today} {time.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })}
+              {chatT.chat.today} {time.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })}
             </div>
             {msgs.map((message, index) => (
-              <div key={index} className={`cw-row ${message.role}`}>
+              <div key={index} className={`cw-row ${message.role}`} dir="auto">
+                {message.role === "bot" && <span className="cw-assistant-name">{ASSISTANT_NAME}</span>}
                 <div className={`cw-bubble ${message.role}`} dir="auto">{message.text}</div>
                 {(message.links?.length || message.link) && (
                   <ChatLinkRow links={message.links?.length ? message.links : [message.link as ChatLink]} />
@@ -254,13 +304,13 @@ export default function ChatWidget({ lang, t }: { lang: Lang; t: T }) {
             ))}
             {!started && (
               <div className="cw-chips">
-                {t.chat.chips.map((chip) => (
-                  <button key={chip} type="button" className="cw-chip" onClick={() => send(chip)}>{chip}</button>
+                {chatT.chat.chips.map((chip) => (
+                  <button key={chip} type="button" className="cw-chip" onClick={() => send(chip === CONTACT_CHIP ? CONTACT_CHIP_TEXT : chip)}>{chip}</button>
                 ))}
               </div>
             )}
             {loading && (
-              <div className="cw-row bot" role="status" aria-label={t.chat.a11y.thinking}>
+              <div className="cw-row bot" role="status" aria-label={chatT.chat.a11y.thinking} dir="auto">
                 <div className="cw-bubble bot cw-dots"><i /><i /><i /></div>
               </div>
             )}
@@ -273,18 +323,18 @@ export default function ChatWidget({ lang, t }: { lang: Lang; t: T }) {
               value={input}
               maxLength={300}
               onChange={(event) => setInput(event.target.value)}
-              placeholder={t.chat.placeholder}
-              aria-label={t.chat.a11y.question}
+              placeholder={chatT.chat.placeholder}
+              aria-label={chatT.chat.a11y.question}
               disabled={loading}
               dir="auto"
             />
             {input.length > 250 && <span className="cw-count">{input.length}/300</span>}
             {SR && (
-              <button type="button" className="cw-icon" aria-label={t.chat.a11y.voice} onClick={listen}>
+              <button type="button" className="cw-icon" aria-label={chatT.chat.a11y.voice} onClick={listen}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="2" width="6" height="12" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v4" /></svg>
               </button>
             )}
-            <button type="submit" className="cw-send" aria-label={t.chat.a11y.send} disabled={loading || !input.trim()}>
+            <button type="submit" className="cw-send" aria-label={chatT.chat.a11y.send} disabled={loading || !input.trim()}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
             </button>
           </form>
@@ -325,10 +375,14 @@ const css = `
 .cw-row{display:flex;flex-direction:column;gap:6px;max-width:85%}
 .cw-row.user{align-self:flex-end;align-items:flex-end}
 .cw-row.bot{align-self:flex-start;align-items:flex-start}
+.cw-row[dir=rtl].user{align-self:flex-start;align-items:flex-start}
+.cw-row[dir=rtl].bot{align-self:flex-end;align-items:flex-end}
+.cw-assistant-name{font-size:11px;line-height:1.2;color:#a2abbb;font-weight:600;margin-bottom:-2px}
 .cw-bubble{padding:10px 14px;border-radius:16px;font-size:15px;line-height:1.45;white-space:pre-wrap;word-break:break-word}
 .cw-bubble.bot{background:#1b2130;border:1px solid rgba(255,255,255,.07)}
 .cw-bubble.user{background:#2dd4bf;color:#04201c}
 .cw-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.cw-row[dir=rtl] .cw-links{justify-content:flex-end}
 .cw-link{display:inline-flex;align-items:center;justify-content:center;gap:7px;background:#fff;color:#111;text-decoration:none;border:1px solid transparent;border-radius:999px;padding:8px 14px;font-size:14px;font-weight:600;transition:background .18s,border-color .18s,transform .18s}
 .cw-link svg{flex:none}
 .cw-link:hover{transform:translateY(-1px)}
