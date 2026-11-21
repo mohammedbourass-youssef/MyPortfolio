@@ -23,6 +23,8 @@ const GithubActivitySection = lazy(() => import('./components/github/LazyGithubA
 
 
 
+const gmailComposeUrl = 'https://mail.google.com/mail/?view=cm&fs=1&to=srx.mbrs2004@gmail.com&su=Portfolio%20contact&body=Hi%20Mohammed%2C'
+
 const icons: Record<string, LucideIcon> = { server: Server, code: Code2, database: Database, activity: Activity, layers: Layers3, graduation: GraduationCap, lightbulb: Lightbulb, terminal: Terminal, gamepad: Sparkles, briefcase: BriefcaseBusiness, building: Building2, rocket: Rocket, smartphone: Smartphone, heart: HeartPulse, truck: Truck, sparkles: Sparkles, target: ArrowDownLeft, globe: Globe2, mobile: Smartphone, architecture: Network, desktop: Monitor, api: Cable }
 
 function readStored<T>(key: string, fallback: T): T { try { const v = localStorage.getItem(key); return v ? JSON.parse(v) as T : fallback } catch { return fallback } }
@@ -83,7 +85,7 @@ export default function App() {
 
   useEffect(() => { const marquees = document.querySelectorAll<HTMLElement>('.focus-ticker,.stack-strip'); if (!('IntersectionObserver' in window)) return; const observer = new IntersectionObserver(entries => entries.forEach(entry => entry.target.toggleAttribute('data-paused', !entry.isIntersecting)), { rootMargin: '120px 0px' }); marquees.forEach(element => observer.observe(element)); return () => observer.disconnect() }, [])
 
-  useEffect(() => { if (!toast) return; const timer = window.setTimeout(() => setToast(''), 2600); return () => window.clearTimeout(timer) }, [toast])
+  useEffect(() => { if (!toast) return; const timer = window.setTimeout(() => setToast(''), 2000); return () => window.clearTimeout(timer) }, [toast])
 
   useEffect(() => { const timer = window.setTimeout(() => setChatReady(true), 1200); return () => window.clearTimeout(timer) }, [])
 
@@ -93,7 +95,7 @@ export default function App() {
 
   const nav: (keyof typeof anchors)[] = ['about','services','skills','projects','journey','certificates','github','experience','contact']
 
-  const copyEmail = async () => { try { await navigator.clipboard.writeText(profile.email); setToast(t.contact.copied) } catch { window.location.href = emailHref(lang) } }
+  const copyEmail = async () => { try { await navigator.clipboard.writeText(profile.email); setToast('Copied!') } catch { window.location.href = emailHref(lang) } }
 
   const closeMenu = () => setMobileOpen(false)
 
@@ -142,7 +144,7 @@ export default function App() {
 
       <section id="experience" className="section-wrap section-block"><SectionHeading eyebrow={`[ SEC_09 // ${t.sections.experience} ]`} title={t.experience.title}/><div className="experience-grid"><div><h3 className="column-heading"><BriefcaseBusiness size={18}/>{t.experience.work}</h3><Experience title={t.experience.roles[0]} org="Teltra Connecting Things" date="Dec 2025 – Jun 2026" detail={t.experience.details[0]}/><Experience title={t.experience.roles[1]} org="Mostaql, Workana" date={`2025 – ${t.experience.present}`} detail={t.experience.details[1]}/><Experience title={t.experience.roles[2]} org="ENSA" date="Jun 2025" detail={t.experience.details[2]}/></div><div><h3 className="column-heading"><GraduationCap size={20}/>{t.experience.education}</h3><Experience title={t.experience.roles[3]} org="ENSAF · Fès" date={`2022 – ${t.experience.present}`} detail={t.experience.details[3]}/><Experience title={t.experience.roles[4]} org="Lycée Prince Moulay Hassan, Fès" date="2022" detail={t.experience.details[4]}/></div></div></section>
 
-      <section id="contact" className="section-wrap section-block contact-section"><div className="contact-panel"><div className="contact-intro"><span className="eyebrow" dir="ltr">[ SEC_10 // {t.sections.contact} ]</span><span className="contact-prompt">{t.contact.eyebrow}</span><h2>{t.contact.title}</h2><AvailabilityStatus t={t}/><p>{t.contact.text}</p><a className="button button-primary" href={emailHref(lang)}><Mail size={17}/>{t.contact.email}</a></div><div className="contact-grid"><ContactCard label={t.contact.email} value={profile.email} href={emailHref(lang)} icon={<Mail/>}/>{profile.phone!=='[PHONE_OPTIONAL]'&&<ContactCard label={t.contact.phone} value={profile.phone} href={whatsappHref(profile.phone)} icon={<Smartphone/>}/>}<ContactCard label={t.contact.linkedin} value="linkedin.com/in/mohammed-bourass-39538a293" href={profile.linkedin} icon={<span className="contact-in">in</span>}/><ContactCard label={t.contact.github} value="github.com/mohammedbourass-youssef" href={profile.github} icon={<Github/>}/><ContactCard label={t.contact.telegram} value="t.me/mb0629" href={profile.telegram} icon={<Send/>}/><ContactCard label={t.contact.instagram} value="@mohammed_youssef_bourass" href={profile.instagram} icon={<Instagram/>}/><ContactCard label={t.contact.youtube} value="@mohammedBourassProjects" href={profile.youtube} icon={<Youtube/>}/>{profile.mostaql&&<ContactCard label={t.contact.mostaql} value={profile.mostaql} href={profile.mostaql} icon={<ExternalLink/>}/ >}{profile.workana&&<ContactCard label={t.contact.workana} value={profile.workana} href={profile.workana} icon={<ExternalLink/>}/>}</div><button className="copy-email" onClick={copyEmail}><Copy size={14}/>{t.contact.copy}</button></div></section>
+      <section id="contact" className="section-wrap section-block contact-section"><div className="contact-panel"><div className="contact-intro"><span className="eyebrow" dir="ltr">[ SEC_10 // {t.sections.contact} ]</span><span className="contact-prompt">{t.contact.eyebrow}</span><h2>{t.contact.title}</h2><AvailabilityStatus t={t}/><p>{t.contact.text}</p><a className="button button-primary" href={gmailComposeUrl} target="_blank" rel="noopener noreferrer"><Mail size={17}/>{t.contact.email}</a></div><div className="contact-grid"><ContactCard label={t.contact.email} value={profile.email} href={gmailComposeUrl} icon={<Mail/>}/>{profile.phone!=='[PHONE_OPTIONAL]'&&<ContactCard label={t.contact.phone} value={profile.phone} href={whatsappHref(profile.phone)} icon={<Smartphone/>}/>}<ContactCard label={t.contact.linkedin} value="linkedin.com/in/mohammed-bourass-39538a293" href={profile.linkedin} icon={<span className="contact-in">in</span>}/><ContactCard label={t.contact.github} value="github.com/mohammedbourass-youssef" href={profile.github} icon={<Github/>}/><ContactCard label={t.contact.telegram} value="t.me/mb0629" href={profile.telegram} icon={<Send/>}/><ContactCard label={t.contact.instagram} value="@mohammed_youssef_bourass" href={profile.instagram} icon={<Instagram/>}/><ContactCard label={t.contact.youtube} value="@mohammedBourassProjects" href={profile.youtube} icon={<Youtube/>}/>{profile.mostaql&&<ContactCard label={t.contact.mostaql} value={profile.mostaql} href={profile.mostaql} icon={<ExternalLink/>}/ >}{profile.workana&&<ContactCard label={t.contact.workana} value={profile.workana} href={profile.workana} icon={<ExternalLink/>}/>}</div><button className="copy-email" onClick={copyEmail}><Copy size={14}/>{t.contact.copy}</button></div></section>
 
     </main>
 
@@ -162,4 +164,4 @@ export default function App() {
 
 function Experience({title,org,date,detail}:{title:string;org:string;date:string;detail:string}){return <article className="experience-item"><div className="experience-marker"/><div className="experience-meta"><h4>{title}</h4><span>{date}</span></div><strong>{org}</strong>{detail&&<p>{detail}</p>}</article>}
 
-function ContactCard({label,value,href,icon}:{label:string;value:string;href:string;icon:React.ReactNode}){return <a className="contact-card" href={href} target={href.startsWith('mailto:')?'_self':'_blank'} rel="noreferrer"><span className="contact-icon">{icon}</span><span><small>{label}</small><strong>{value}</strong></span><ExternalLink size={13}/></a>}
+function ContactCard({label,value,href,icon}:{label:string;value:string;href:string;icon:React.ReactNode}){return <a className="contact-card" href={href} target="_blank" rel="noopener noreferrer"><span className="contact-icon">{icon}</span><span><small>{label}</small><strong>{value}</strong></span><ExternalLink size={13}/></a>}
