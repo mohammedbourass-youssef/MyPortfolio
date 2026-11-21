@@ -10,6 +10,8 @@ const ERROR_RATE_LIMIT = "Too many questions, please wait a minute.";
 const ERROR_NETWORK = "I couldn't reach the assistant. Please try again.";
 const ERROR_NO_ANSWER = "I couldn't find an answer. Please try again.";
 const SPEECH_KEY = "cw-speech-bubble";
+const GMAIL_COMPOSE_PATTERN = /mail\.google\.com\/mail/i;
+const MOBILE_MAILTO_URL = "mailto:srx.mbrs2004@gmail.com?subject=Portfolio%20contact&body=Hi%20Mohammed%2C";
 
 type ChatLink = { label: string; url: string };
 type LinkKind = "email" | "whatsapp" | "telegram" | "linkedin" | "link";
@@ -48,7 +50,7 @@ function normalizeLinks(raw: unknown, fallbackLabel: string): ChatLink[] {
 
 function getLinkKind(link: ChatLink): LinkKind {
   const value = link.url.toLowerCase();
-  if (/^mailto:/i.test(value)) return "email";
+  if (/^mailto:/i.test(value) || GMAIL_COMPOSE_PATTERN.test(value)) return "email";
   if (/wa\.me/i.test(value)) return "whatsapp";
   if (/t\.me/i.test(value)) return "telegram";
   if (/linkedin\.com/i.test(value)) return "linkedin";
@@ -64,16 +66,17 @@ function LinkIcon({ kind }: { kind: LinkKind }) {
   return <svg {...common}><path d="M10.5 13.5a5 5 0 0 0 7.5.5l2-2a5 5 0 0 0-7-7l-1.2 1.2" /><path d="M13.5 10.5a5 5 0 0 0-7.5-.5l-2 2a5 5 0 0 0 7 7l1.2-1.2" /></svg>;
 }
 
-function ChatLinkButton({ link }: { link: ChatLink }) {
+function ChatLinkButton({ link, isMobile }: { link: ChatLink; isMobile: boolean }) {
   const kind = getLinkKind(link);
-  const external = /^https:\/\//i.test(link.url);
+  const url = isMobile && GMAIL_COMPOSE_PATTERN.test(link.url) ? MOBILE_MAILTO_URL : link.url;
+  const external = /^https:\/\//i.test(url);
   return (
     <a
       className={`cw-link ${kind}`}
-      href={link.url}
+      href={url}
       target={external ? "_blank" : undefined}
       rel={external ? "noopener noreferrer" : undefined}
-      download={/\.pdf$/i.test(link.url)}
+      download={/\.pdf$/i.test(url)}
     >
       <LinkIcon kind={kind} />
       <span>{link.label}</span>
@@ -81,8 +84,8 @@ function ChatLinkButton({ link }: { link: ChatLink }) {
   );
 }
 
-function ChatLinkRow({ links }: { links: ChatLink[] }) {
-  return <div className="cw-links">{links.map((link, index) => <ChatLinkButton key={`${link.url}-${index}`} link={link} />)}</div>;
+function ChatLinkRow({ links, isMobile }: { links: ChatLink[]; isMobile: boolean }) {
+  return <div className="cw-links">{links.map((link, index) => <ChatLinkButton key={`${link.url}-${index}`} link={link} isMobile={isMobile} />)}</div>;
 }
 
 export default function ChatWidget(props: { lang: Lang; t: T }) {
@@ -98,12 +101,17 @@ export default function ChatWidget(props: { lang: Lang; t: T }) {
   const [time, setTime] = useState(() => new Date());
   const [speechVisible, setSpeechVisible] = useState(false);
   const [launcherPulse, setLauncherPulse] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const launcherRef = useRef<HTMLButtonElement>(null);
   const lastSent = useRef(0);
   const openedRef = useRef(false);
   const started = msgs.some((message) => message.role === "user");
+
+  useEffect(() => {
+    setIsMobile(/Android|iPhone|iPad/i.test(navigator.userAgent));
+  }, []);
 
   useEffect(() => {
     setMsgs((current) => current.some((message) => message.role === "user")
@@ -298,7 +306,7 @@ export default function ChatWidget(props: { lang: Lang; t: T }) {
                 {message.role === "bot" && <span className="cw-assistant-name">{ASSISTANT_NAME}</span>}
                 <div className={`cw-bubble ${message.role}`} dir="auto">{message.text}</div>
                 {(message.links?.length || message.link) && (
-                  <ChatLinkRow links={message.links?.length ? message.links : [message.link as ChatLink]} />
+                  <ChatLinkRow links={message.links?.length ? message.links : [message.link as ChatLink]} isMobile={isMobile} />
                 )}
               </div>
             ))}
