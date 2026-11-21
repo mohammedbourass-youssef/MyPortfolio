@@ -14,7 +14,7 @@ function CertificateCard({ certificate, lang, t }: { certificate: Certificate; l
   return <article className="certificate-card">
     <div className="certificate-thumb">
       <FileBadge className="certificate-placeholder" size={35} aria-hidden="true" />
-      {!thumbFailed && <img src={assetUrl(thumb)} alt="" width={520} height={403} loading="lazy" decoding="async" onError={() => setThumbFailed(true)} />}
+      {!thumbFailed && <img src={assetUrl(thumb)} alt={`Preview of ${certificate.title[lang]}`} width={520} height={403} loading="lazy" decoding="async" onError={() => setThumbFailed(true)} />}
       <span className="certificate-file-type">PDF</span>
     </div>
     <div className="certificate-card-copy">
