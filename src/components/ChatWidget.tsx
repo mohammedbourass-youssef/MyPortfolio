@@ -18,9 +18,6 @@ type LinkKind = "email" | "whatsapp" | "telegram" | "linkedin" | "link";
 type Msg = { role: "user" | "bot"; text: string; links?: ChatLink[]; link?: ChatLink; greeting?: boolean; error?: boolean };
 type HistoryMessage = { role: "user" | "assistant"; content: string };
 
-const SR: any =
-  typeof window !== "undefined" ? (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition : null;
-
 function withAssistantName(text: string) {
   return text.replace(/\{assistant\}/g, ASSISTANT_NAME);
 }
@@ -232,14 +229,6 @@ export default function ChatWidget(props: { lang: Lang; t: T }) {
     }
   }
 
-  function listen() {
-    if (!SR) return;
-    const recognition = new SR();
-    recognition.lang = locale;
-    recognition.onresult = (event: any) => setInput(String(event.results[0][0].transcript).slice(0, 300));
-    recognition.start();
-  }
-
   return (
     <>
       <style>{css}</style>
@@ -337,11 +326,6 @@ export default function ChatWidget(props: { lang: Lang; t: T }) {
               dir="auto"
             />
             {input.length > 250 && <span className="cw-count">{input.length}/300</span>}
-            {SR && (
-              <button type="button" className="cw-icon" aria-label={chatT.chat.a11y.voice} onClick={listen}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="2" width="6" height="12" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v4" /></svg>
-              </button>
-            )}
             <button type="submit" className="cw-send" aria-label={chatT.chat.a11y.send} disabled={loading || !input.trim()}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
             </button>
